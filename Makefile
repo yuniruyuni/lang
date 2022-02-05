@@ -11,3 +11,6 @@ clean:
 build:
 	mkdir -p $(BINDIR)
 	go build -o $(BINDIR)/$(TARGET) .
+
+test: clean build
+	./test.sh
