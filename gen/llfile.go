@@ -1,9 +1,7 @@
 package gen
 
 import (
-	"bufio"
 	"fmt"
-	"os"
 )
 
 const content = `
@@ -17,8 +15,6 @@ define dso_local i32 @main() #0 {
 }
 
 declare i32 @printf(i8*, ...) #1`
-
-var sc = bufio.NewScanner(os.Stdin)
 
 type LLFile struct {
 	Word string
