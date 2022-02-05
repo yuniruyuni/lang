@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 
@@ -9,9 +10,13 @@ import (
 	"github.com/yuniruyuni/lang/token"
 )
 
-func tokenize(s string) []*token.Token {
+func specifiedString(code string) (string, error) {
 	t := token.Tokenizer{}
-	return t.Tokenize(s)
+	tks := t.Tokenize(code)
+	if len(tks) == 0 {
+		return "", errors.New("failed to tokenize")
+	}
+	return tks[0].Str, nil
 }
 
 func outputLL(word string) {
@@ -23,6 +28,11 @@ var sc = bufio.NewScanner(os.Stdin)
 
 func main() {
 	sc.Scan()
-	word := sc.Text()
+	code := sc.Text()
+	word, err := specifiedString(code)
+	if err != nil {
+		_ = fmt.Errorf("failed to tokenize code.")
+		os.Exit(-1)
+	}
 	outputLL(word)
 }

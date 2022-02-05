@@ -19,6 +19,8 @@ test() {
     fi
 }
 
-test "" ""
-test "test" "test"
-test "日本語" "日本語"
+test '"test"' 'test'
+test '"日本語"' '日本語'
+test ' "日本語" ' '日本語'
+test '"日本語" ' '日本語'
+test ' "日本語"' '日本語'
