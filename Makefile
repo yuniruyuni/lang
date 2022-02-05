@@ -4,7 +4,7 @@ BINDIR = bin
 .DEFAULT_GOAL = build
 
 clean:
-	rm -f $(BINDIR)
+	rm -rf $(BINDIR)
 
 build:
 	mkdir -p $(BINDIR)
