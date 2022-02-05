@@ -10,6 +10,7 @@ RUN apk add --update \
     musl-dev \
     go \
     curl \
-    llvm
+    llvm \
+    clang
 
 ENTRYPOINT ["/bin/bash"]
