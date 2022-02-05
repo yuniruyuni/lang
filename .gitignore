@@ -15,4 +15,4 @@
 go.work
 
 # ignore final binary
-/lang
+/bin/*
