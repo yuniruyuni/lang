@@ -15,4 +15,6 @@
 go.work
 
 # ignore final binary
-/bin/*
+/bin
+# ignore temp directory
+/.tmp
