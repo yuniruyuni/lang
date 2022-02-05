@@ -13,5 +13,8 @@ build:
 	go build -o $(BINDIR)/$(TARGET) .
 
 test: clean build
-	go test
+	# the `./` is needed for this test,
+	# but I don't know why so please let me know
+	# if you reader have opinion.
+	go test ./...
 	./test.sh
