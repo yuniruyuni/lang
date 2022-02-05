@@ -1,0 +1,7 @@
+services:
+  sh:
+    pull_policy: build
+    build:
+      context: .
+    volumes:
+      - ./:/lang

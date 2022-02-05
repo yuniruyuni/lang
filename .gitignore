@@ -13,3 +13,6 @@
 
 # Go workspace file
 go.work
+
+# ignore final binary
+/lang
