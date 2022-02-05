@@ -13,4 +13,5 @@ build:
 	go build -o $(BINDIR)/$(TARGET) .
 
 test: clean build
+	go test
 	./test.sh
