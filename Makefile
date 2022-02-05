@@ -1,10 +1,12 @@
 TARGET = lang
 BINDIR = bin
+TMPDIR = .tmp
 
 .DEFAULT_GOAL = build
 
 clean:
 	rm -rf $(BINDIR)
+	rm -rf $(TMPDIR)
 
 build:
 	mkdir -p $(BINDIR)
