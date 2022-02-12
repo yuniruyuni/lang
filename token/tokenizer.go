@@ -32,6 +32,10 @@ func (t *Tokenizer) changeState(st state.State) {
 	t.beg = t.cur
 }
 
+func IsDigit(ch rune) bool {
+	return '0' <= ch && ch <= '9'
+}
+
 func (t *Tokenizer) forInit(ch rune) {
 	if ch == ' ' || ch == '\t' || ch == 0 {
 		return
@@ -42,7 +46,12 @@ func (t *Tokenizer) forInit(ch rune) {
 		return
 	}
 
-	if '0' <= ch && ch <= '9' {
+	if ch == '+' {
+		t.changeState(state.Plus)
+		return
+	}
+
+	if IsDigit(ch) {
 		t.changeState(state.Integer)
 		return
 	}
@@ -67,7 +76,7 @@ func (t *Tokenizer) forString(ch rune) {
 }
 
 func (t *Tokenizer) forInteger(ch rune) {
-	if '0' <= ch && ch <= '9' {
+	if IsDigit(ch) {
 		// if 0~9(digit char) has come,
 		// we will continue to read it to read next digit.
 		return
@@ -81,6 +90,39 @@ func (t *Tokenizer) forInteger(ch rune) {
 		End:  t.cur,
 	}
 	t.emit(tk)
+
+	if ch == '"' {
+		t.changeState(state.String)
+		return
+	}
+
+	if ch == '+' {
+		t.changeState(state.Plus)
+		return
+	}
+
+	t.changeState(state.Init)
+}
+
+func (t *Tokenizer) forPlus(ch rune) {
+	tk := &Token{
+		Kind: kind.Plus,
+		Str:  t.code[t.beg:t.cur],
+		Beg:  t.beg,
+		End:  t.cur,
+	}
+	t.emit(tk)
+
+	if ch == '"' {
+		t.changeState(state.String)
+		return
+	}
+
+	if IsDigit(ch) {
+		t.changeState(state.Integer)
+		return
+	}
+
 	t.changeState(state.Init)
 }
 
@@ -93,6 +135,8 @@ func (t *Tokenizer) next(pos int, ch rune) {
 		t.forString(ch)
 	case state.Integer:
 		t.forInteger(ch)
+	case state.Plus:
+		t.forPlus(ch)
 	}
 }
 

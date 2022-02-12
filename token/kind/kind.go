@@ -5,4 +5,5 @@ type Kind int
 const (
 	String = iota
 	Integer
+	Plus
 )

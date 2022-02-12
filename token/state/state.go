@@ -6,4 +6,5 @@ const (
 	Init = iota
 	String
 	Integer
+	Plus
 )
