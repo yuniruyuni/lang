@@ -19,7 +19,7 @@ func (s *Sum) GenHeader() IR {
 	return s.LHS.GenHeader() + s.RHS.GenHeader()
 }
 
-func (s *Sum) Gen() IR {
+func (s *Sum) GenBody() IR {
 	return ``
 }
 
