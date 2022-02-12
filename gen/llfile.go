@@ -5,6 +5,8 @@ import (
 )
 
 const bodyOpen = `
+@.intfmt = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
+
 define dso_local i32 @main() #0 {
   %1 = alloca i32, align 4
   store i32 0, i32* %1, align 4
