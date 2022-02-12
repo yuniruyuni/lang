@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/yuniruyuni/lang/ast"
 	"github.com/yuniruyuni/lang/gen"
 	"github.com/yuniruyuni/lang/token"
 )
@@ -19,8 +20,8 @@ func specifiedString(code string) (string, error) {
 	return tks[0].Str, nil
 }
 
-func outputLL(word string) {
-	ll := gen.LLFile{Word: word}
+func outputLL(root ast.AST) {
+	ll := gen.LLFile{AST: root}
 	fmt.Print(ll.Generate())
 }
 
@@ -34,5 +35,5 @@ func main() {
 		_ = fmt.Errorf("failed to tokenize code.")
 		os.Exit(-1)
 	}
-	outputLL(word)
+	outputLL(&ast.String{Word: word})
 }
