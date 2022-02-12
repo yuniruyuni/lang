@@ -56,6 +56,27 @@ func TestTokenizer_Tokenize(t *testing.T) {
 				{Kind: kind.String, Str: "test", Beg: 1, End: 5},
 			},
 		},
+		{
+			name: "single integer",
+			code: "1",
+			want: []*token.Token{
+				{Kind: kind.Integer, Str: "1", Beg: 0, End: 1},
+			},
+		},
+		{
+			name: "single integer",
+			code: "10",
+			want: []*token.Token{
+				{Kind: kind.Integer, Str: "10", Beg: 0, End: 2},
+			},
+		},
+		{
+			name: "quoted integer is a string",
+			code: `"1"`,
+			want: []*token.Token{
+				{Kind: kind.String, Str: "1", Beg: 1, End: 2},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
