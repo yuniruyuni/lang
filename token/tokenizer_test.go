@@ -25,60 +25,35 @@ func TestTokenizer_Tokenize(t *testing.T) {
 			name: "single string",
 			code: "\"test\"",
 			want: []*token.Token{
-				{
-					Kind: kind.String,
-					Str:  "test",
-					Beg:  1,
-					End:  5,
-				},
+				{Kind: kind.String, Str: "test", Beg: 1, End: 5},
 			},
 		},
 		{
 			name: "with space",
 			code: " \"test\"",
 			want: []*token.Token{
-				{
-					Kind: kind.String,
-					Str:  "test",
-					Beg:  2,
-					End:  6,
-				},
+				{Kind: kind.String, Str: "test", Beg: 2, End: 6},
 			},
 		},
 		{
 			name: "with tab",
 			code: "\t\"test\"",
 			want: []*token.Token{
-				{
-					Kind: kind.String,
-					Str:  "test",
-					Beg:  2,
-					End:  6,
-				},
+				{Kind: kind.String, Str: "test", Beg: 2, End: 6},
 			},
 		},
 		{
 			name: "with space right",
 			code: "\"test\" ",
 			want: []*token.Token{
-				{
-					Kind: kind.String,
-					Str:  "test",
-					Beg:  1,
-					End:  5,
-				},
+				{Kind: kind.String, Str: "test", Beg: 1, End: 5},
 			},
 		},
 		{
 			name: "with tab right",
 			code: "\"test\"\t",
 			want: []*token.Token{
-				{
-					Kind: kind.String,
-					Str:  "test",
-					Beg:  1,
-					End:  5,
-				},
+				{Kind: kind.String, Str: "test", Beg: 1, End: 5},
 			},
 		},
 	}
