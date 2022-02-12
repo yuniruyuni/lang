@@ -34,7 +34,7 @@ func (p *Parser) LookAt(n int) *token.Token {
 }
 
 func (p *Parser) Root() (ast.AST, error) {
-	if len(p.tokens) != 1 {
+	if len(p.tokens) == 0 {
 		return nil, errors.New("not enough tokens")
 	}
 

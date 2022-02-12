@@ -24,8 +24,13 @@ type LLFile struct {
 }
 
 func (ll *LLFile) Generate() ast.IR {
+	gen := ast.Gen{}
+	_ = gen.NextReg()
+
+	ll.AST.AcquireReg(&gen)
+
 	header := ll.AST.GenHeader()
-	body := bodyOpen + ll.AST.GenBody() + bodyClose
+	body := bodyOpen + ll.AST.GenBody() + ll.AST.GenPrinter() + bodyClose
 
 	return ast.IR(header + body)
 }
