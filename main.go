@@ -5,12 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"strconv"
 
 	"github.com/yuniruyuni/lang/ast"
 	"github.com/yuniruyuni/lang/gen"
+	"github.com/yuniruyuni/lang/parse"
 	"github.com/yuniruyuni/lang/token"
-	"github.com/yuniruyuni/lang/token/kind"
 )
 
 func outputLL(root ast.AST) {
@@ -29,26 +28,6 @@ func tokenize(code string) ([]*token.Token, error) {
 	return tks, nil
 }
 
-func parse(tks []*token.Token) (ast.AST, error) {
-	if len(tks) != 1 {
-		return nil, errors.New("not enough tokens")
-	}
-
-	t := tks[0]
-	switch t.Kind {
-	case kind.String:
-		return &ast.String{Word: t.Str}, nil
-	case kind.Integer:
-		val, err := strconv.Atoi(t.Str)
-		if err != nil {
-			return nil, err
-		}
-		return &ast.Integer{Value: val}, nil
-	default:
-		return nil, errors.New("unsupported node")
-	}
-}
-
 func main() {
 	sc.Scan()
 	code := sc.Text()
@@ -59,7 +38,7 @@ func main() {
 		os.Exit(-1)
 	}
 
-	root, err := parse(tks)
+	root, err := parse.Parse(tks)
 	if err != nil {
 		_ = fmt.Errorf("failed to parse code: %s", err.Error())
 		os.Exit(-1)
