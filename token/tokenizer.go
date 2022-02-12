@@ -2,18 +2,12 @@ package token
 
 import (
 	"github.com/yuniruyuni/lang/token/kind"
-)
-
-type State int
-
-const (
-	StateInit = iota
-	StateString
+	"github.com/yuniruyuni/lang/token/state"
 )
 
 type Tokenizer struct {
 	// current state for this tokenizer.
-	State State
+	State state.State
 
 	// entire source code.
 	code string
@@ -33,7 +27,7 @@ func (t *Tokenizer) emit(tk *Token) {
 	t.tokens = append(t.tokens, tk)
 }
 
-func (t *Tokenizer) changeState(st State) {
+func (t *Tokenizer) changeState(st state.State) {
 	t.State = st
 	t.beg = t.cur + 1
 }
@@ -44,7 +38,7 @@ func (t *Tokenizer) forInit(ch rune) {
 	}
 
 	if ch == '"' {
-		t.changeState(StateString)
+		t.changeState(state.String)
 		return
 	}
 }
@@ -58,7 +52,7 @@ func (t *Tokenizer) forString(ch rune) {
 			End:  t.cur,
 		}
 		t.emit(tk)
-		t.changeState(StateInit)
+		t.changeState(state.Init)
 		return
 	}
 }
@@ -69,9 +63,9 @@ func (t *Tokenizer) Tokenize(code string) []*Token {
 	for pos, ch := range t.code {
 		t.cur = pos
 		switch t.State {
-		case StateInit:
+		case state.Init:
 			t.forInit(ch)
-		case StateString:
+		case state.String:
 			t.forString(ch)
 		}
 	}
