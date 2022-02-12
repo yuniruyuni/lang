@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/yuniruyuni/lang/token"
+	"github.com/yuniruyuni/lang/token/kind"
 	"gotest.tools/assert"
 )
 
@@ -25,7 +26,7 @@ func TestTokenizer_Tokenize(t *testing.T) {
 			code: "\"test\"",
 			want: []*token.Token{
 				{
-					Kind: token.KindString,
+					Kind: kind.String,
 					Str:  "test",
 					Beg:  1,
 					End:  5,
@@ -37,7 +38,7 @@ func TestTokenizer_Tokenize(t *testing.T) {
 			code: " \"test\"",
 			want: []*token.Token{
 				{
-					Kind: token.KindString,
+					Kind: kind.String,
 					Str:  "test",
 					Beg:  2,
 					End:  6,
@@ -49,7 +50,7 @@ func TestTokenizer_Tokenize(t *testing.T) {
 			code: "\t\"test\"",
 			want: []*token.Token{
 				{
-					Kind: token.KindString,
+					Kind: kind.String,
 					Str:  "test",
 					Beg:  2,
 					End:  6,
@@ -61,7 +62,7 @@ func TestTokenizer_Tokenize(t *testing.T) {
 			code: "\"test\" ",
 			want: []*token.Token{
 				{
-					Kind: token.KindString,
+					Kind: kind.String,
 					Str:  "test",
 					Beg:  1,
 					End:  5,
@@ -73,7 +74,7 @@ func TestTokenizer_Tokenize(t *testing.T) {
 			code: "\"test\"\t",
 			want: []*token.Token{
 				{
-					Kind: token.KindString,
+					Kind: kind.String,
 					Str:  "test",
 					Beg:  1,
 					End:  5,

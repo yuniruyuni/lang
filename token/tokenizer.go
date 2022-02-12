@@ -1,5 +1,9 @@
 package token
 
+import (
+	"github.com/yuniruyuni/lang/token/kind"
+)
+
 type State int
 
 const (
@@ -48,7 +52,7 @@ func (t *Tokenizer) forInit(ch rune) {
 func (t *Tokenizer) forString(ch rune) {
 	if ch == '"' {
 		tk := &Token{
-			Kind: KindString,
+			Kind: kind.String,
 			Str:  t.code[t.beg:t.cur],
 			Beg:  t.beg,
 			End:  t.cur,
