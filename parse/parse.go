@@ -20,47 +20,52 @@ type Parser struct {
 	tokens []*token.Token
 }
 
-func (p *Parser) Next() *token.Token {
-	p.cur += 1
-	return p.tokens[p.cur-1]
+func (p *Parser) Advance(n int) {
+	p.cur += n
+}
+
+func (p *Parser) Revert(n int) {
+	p.cur -= n
 }
 
 func (p *Parser) LookAt(n int) *token.Token {
-	if p.cur+n >= len(p.tokens) {
-		return nil
+	at := p.cur + n
+	if at < len(p.tokens) {
+		return p.tokens[at]
 	}
+	return nil
+}
 
-	return p.tokens[p.cur+n]
+func (p *Parser) End() bool {
+	return p.cur == len(p.tokens)
 }
 
 func (p *Parser) Root() (ast.AST, error) {
-	if len(p.tokens) == 0 {
-		return nil, errors.New("not enough tokens")
-	}
-
-	t := p.Next()
-
-	cands := []func(t *token.Token) (ast.AST, error){
+	cands := []func() (ast.AST, error){
 		p.Sum,
 		p.Integer,
 		p.String,
 	}
 
 	for _, cand := range cands {
-		parsed, err := cand(t)
+		parsed, err := cand()
 		if err != nil {
 			continue
 		}
-		return parsed, nil
+		if p.End() {
+			return parsed, nil
+		}
 	}
 
 	return nil, errors.New("invalid tokens")
 }
 
-func (p *Parser) Integer(t *token.Token) (ast.AST, error) {
-	if t.Kind != kind.Integer {
+func (p *Parser) Integer() (ast.AST, error) {
+	t := p.LookAt(0)
+	if t == nil || t.Kind != kind.Integer {
 		return nil, errors.New("invalid token")
 	}
+	p.Advance(1)
 
 	val, err := strconv.Atoi(t.Str)
 	if err != nil {
@@ -69,15 +74,20 @@ func (p *Parser) Integer(t *token.Token) (ast.AST, error) {
 	return &ast.Integer{Value: val}, nil
 }
 
-func (p *Parser) String(t *token.Token) (ast.AST, error) {
-	if t.Kind != kind.String {
+func (p *Parser) String() (ast.AST, error) {
+	t := p.LookAt(0)
+	if t == nil || t.Kind != kind.String {
 		return nil, errors.New("invalid token")
 	}
+	p.Advance(1)
+
 	return &ast.String{Word: t.Str}, nil
 }
 
-func (p *Parser) Sum(t1 *token.Token) (ast.AST, error) {
-	lhs, err := p.Integer(t1)
+func (p *Parser) Sum() (ast.AST, error) {
+	// Check does we have a sequence <Integer, Plus, Sum>
+
+	lhs, err := p.Integer()
 	if err != nil {
 		return nil, err
 	}
@@ -86,21 +96,18 @@ func (p *Parser) Sum(t1 *token.Token) (ast.AST, error) {
 	if t2 == nil || t2.Kind != kind.Plus {
 		return lhs, nil
 	}
+	p.Advance(1)
 
-	_ = p.Next()
-	t3 := p.Next()
-
-	rhs, err := p.Sum(t3)
+	rhs, err := p.Sum()
 	if err != nil {
+		p.Revert(1)
 		return lhs, nil
 	}
 
-	res := &ast.Sum{
+	return &ast.Sum{
 		LHS: lhs,
 		RHS: rhs,
-	}
-
-	return res, nil
+	}, nil
 }
 
 func Parse(tks []*token.Token) (ast.AST, error) {
