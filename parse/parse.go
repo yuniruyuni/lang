@@ -36,6 +36,15 @@ func (p *Parser) LookAt(n int) *token.Token {
 	return nil
 }
 
+func (p *Parser) Consume(kind kind.Kind) *token.Token {
+	t := p.LookAt(0)
+	if t == nil || t.Kind != kind {
+		return nil
+	}
+	p.Advance(1)
+	return t
+}
+
 func (p *Parser) End() bool {
 	return p.cur == len(p.tokens)
 }
@@ -61,26 +70,23 @@ func (p *Parser) Root() (ast.AST, error) {
 }
 
 func (p *Parser) Integer() (ast.AST, error) {
-	t := p.LookAt(0)
-	if t == nil || t.Kind != kind.Integer {
+	t := p.Consume(kind.Integer)
+	if t == nil {
 		return nil, errors.New("invalid token")
 	}
-	p.Advance(1)
 
 	val, err := strconv.Atoi(t.Str)
 	if err != nil {
-		return nil, err
+		panic("Integer constant size over than max bit size")
 	}
 	return &ast.Integer{Value: val}, nil
 }
 
 func (p *Parser) String() (ast.AST, error) {
-	t := p.LookAt(0)
-	if t == nil || t.Kind != kind.String {
+	t := p.Consume(kind.String)
+	if t == nil {
 		return nil, errors.New("invalid token")
 	}
-	p.Advance(1)
-
 	return &ast.String{Word: t.Str}, nil
 }
 
@@ -92,11 +98,10 @@ func (p *Parser) Sum() (ast.AST, error) {
 		return nil, err
 	}
 
-	t2 := p.LookAt(0)
-	if t2 == nil || t2.Kind != kind.Plus {
+	t2 := p.Consume(kind.Plus)
+	if t2 == nil {
 		return lhs, nil
 	}
-	p.Advance(1)
 
 	rhs, err := p.Sum()
 	if err != nil {
