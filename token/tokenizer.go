@@ -27,130 +27,126 @@ func (t *Tokenizer) emit(tk *Token) {
 	t.tokens = append(t.tokens, tk)
 }
 
-func (t *Tokenizer) changeState(st state.State) {
-	t.State = st
-	t.beg = t.cur
-}
-
 func IsDigit(ch rune) bool {
 	return '0' <= ch && ch <= '9'
 }
 
-func (t *Tokenizer) forInit(ch rune) {
-	if ch == ' ' || ch == '\t' || ch == 0 {
-		return
-	}
+type Emitter func(t *Tokenizer) *Token
 
-	if ch == '"' {
-		t.changeState(state.String)
-		return
-	}
-
-	if ch == '+' {
-		t.changeState(state.Plus)
-		return
-	}
-
-	if IsDigit(ch) {
-		t.changeState(state.Integer)
-		return
-	}
-
-	// TODO: emit error
+func EmitNil(_ *Tokenizer) *Token {
+	return nil
 }
 
-func (t *Tokenizer) forString(ch rune) {
-	if ch == '"' {
-		tk := &Token{
-			Kind: kind.String,
-			Str:  t.code[t.beg+1 : t.cur],
-			Beg:  t.beg + 1,
-			End:  t.cur,
+type Checker func(ch rune) bool
+
+func Ch(want rune) Checker {
+	return func(ch rune) bool { return ch == want }
+}
+
+func NilCh(ch rune) bool {
+	return ch == 0
+}
+
+func Any(ch rune) bool {
+	return true
+}
+
+type Edge struct {
+	check   Checker
+	emit    Emitter
+	forward bool
+	next    state.State
+}
+
+type Transition []Edge
+type StateMap map[state.State]Transition
+
+var tr = StateMap{
+	state.Init: Transition{
+		{check: NilCh, emit: EmitNil, next: state.Init},
+		{check: Ch(' '), emit: EmitNil, next: state.Init},
+		{check: Ch('\t'), emit: EmitNil, next: state.Init},
+		{check: Ch('"'), emit: EmitNil, forward: true, next: state.String},
+		{check: Ch('+'), emit: EmitNil, forward: true, next: state.Plus},
+		{check: IsDigit, emit: EmitNil, forward: true, next: state.Integer},
+	},
+	state.String: Transition{
+		{check: Ch('"'), emit: EmitString, forward: true, next: state.Init},
+	},
+	state.Integer: Transition{
+		{check: IsDigit, emit: EmitNil, next: state.Integer},
+		{check: Ch('"'), emit: EmitInteger, forward: true, next: state.String},
+		{check: Ch('+'), emit: EmitInteger, forward: true, next: state.Plus},
+		{check: Any, emit: EmitInteger, forward: true, next: state.Init},
+	},
+	state.Plus: Transition{
+		{check: Ch('"'), emit: EmitPlus, forward: true, next: state.String},
+		{check: IsDigit, emit: EmitPlus, forward: true, next: state.Integer},
+		{check: Any, emit: EmitPlus, forward: true, next: state.Init},
+	},
+}
+
+func (tr Transition) Run(tk *Tokenizer, ch rune) {
+	for _, edge := range tr {
+		if !edge.check(ch) {
+			continue
 		}
-		t.emit(tk)
-		t.changeState(state.Init)
+
+		t := edge.emit(tk)
+		if t != nil {
+			tk.emit(t)
+		}
+
+		if edge.forward {
+			tk.beg = tk.cur
+		}
+		tk.State = edge.next
+
 		return
 	}
-
-	// read all next token
 }
 
-func (t *Tokenizer) forInteger(ch rune) {
-	if IsDigit(ch) {
-		// if 0~9(digit char) has come,
-		// we will continue to read it to read next digit.
-		return
+func EmitString(tk *Tokenizer) *Token {
+	return &Token{
+		Kind: kind.String,
+		Str:  tk.code[tk.beg+1 : tk.cur],
+		Beg:  tk.beg + 1,
+		End:  tk.cur,
 	}
+}
 
-	// for other char, we assume it is the end of an integer constant.
-	tk := &Token{
+func EmitInteger(tk *Tokenizer) *Token {
+	return &Token{
 		Kind: kind.Integer,
-		Str:  t.code[t.beg:t.cur],
-		Beg:  t.beg,
-		End:  t.cur,
+		Str:  tk.code[tk.beg:tk.cur],
+		Beg:  tk.beg,
+		End:  tk.cur,
 	}
-	t.emit(tk)
-
-	if ch == '"' {
-		t.changeState(state.String)
-		return
-	}
-
-	if ch == '+' {
-		t.changeState(state.Plus)
-		return
-	}
-
-	t.changeState(state.Init)
 }
 
-func (t *Tokenizer) forPlus(ch rune) {
-	tk := &Token{
+func EmitPlus(tk *Tokenizer) *Token {
+	return &Token{
 		Kind: kind.Plus,
-		Str:  t.code[t.beg:t.cur],
-		Beg:  t.beg,
-		End:  t.cur,
+		Str:  tk.code[tk.beg:tk.cur],
+		Beg:  tk.beg,
+		End:  tk.cur,
 	}
-	t.emit(tk)
-
-	if ch == '"' {
-		t.changeState(state.String)
-		return
-	}
-
-	if IsDigit(ch) {
-		t.changeState(state.Integer)
-		return
-	}
-
-	t.changeState(state.Init)
 }
 
 func (t *Tokenizer) next(pos int, ch rune) {
 	t.cur = pos
-	switch t.State {
-	case state.Init:
-		t.forInit(ch)
-	case state.String:
-		t.forString(ch)
-	case state.Integer:
-		t.forInteger(ch)
-	case state.Plus:
-		t.forPlus(ch)
-	}
+	tr[t.State].Run(t, ch)
 }
 
 func (t *Tokenizer) Tokenize(code string) []*Token {
 	t.code = code
 	t.tokens = []*Token{}
 
-	var pos int
-	var ch rune
-	for pos, ch = range t.code {
+	for pos, ch := range t.code {
 		t.next(pos, ch)
 	}
 	// 0 is 0-value of rune, it can assume as NULL char.
-	t.next(pos+1, 0)
+	t.next(len(t.code), 0)
 
 	return t.tokens
 }
