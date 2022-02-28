@@ -5,6 +5,7 @@ type State int
 const (
 	Init = iota
 	String
+	Escape
 	Integer
 	Plus
 )
