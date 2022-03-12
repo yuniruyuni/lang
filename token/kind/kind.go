@@ -9,4 +9,6 @@ const (
 	Minus
 	Multiply
 	Divide
+	LeftParen
+	RightParen
 )

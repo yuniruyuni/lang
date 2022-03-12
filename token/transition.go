@@ -23,6 +23,8 @@ var table = Transition{
 		{check: Ch('-'), emit: Skip, next: state.Minus},
 		{check: Ch('*'), emit: Skip, next: state.Multiply},
 		{check: Ch('/'), emit: Skip, next: state.Divide},
+		{check: Ch('('), emit: Skip, next: state.LeftParen},
+		{check: Ch(')'), emit: Skip, next: state.RightParen},
 		{check: IsDigit, emit: Skip, next: state.Integer},
 	},
 	state.String: Edges{
@@ -39,6 +41,8 @@ var table = Transition{
 		{check: Ch('-'), emit: EmitInteger, next: state.Minus},
 		{check: Ch('*'), emit: EmitInteger, next: state.Multiply},
 		{check: Ch('/'), emit: EmitInteger, next: state.Divide},
+		{check: Ch('('), emit: EmitInteger, next: state.LeftParen},
+		{check: Ch(')'), emit: EmitInteger, next: state.RightParen},
 		{check: Any, emit: EmitInteger, next: state.Init},
 	},
 	state.Plus: Edges{
@@ -60,6 +64,16 @@ var table = Transition{
 		{check: Ch('"'), emit: EmitDivide, next: state.String},
 		{check: IsDigit, emit: EmitDivide, next: state.Integer},
 		{check: Any, emit: EmitDivide, next: state.Init},
+	},
+	state.LeftParen: Edges{
+		{check: Ch('"'), emit: EmitLeftParen, next: state.String},
+		{check: IsDigit, emit: EmitLeftParen, next: state.Integer},
+		{check: Any, emit: EmitLeftParen, next: state.Init},
+	},
+	state.RightParen: Edges{
+		{check: Ch('"'), emit: EmitRightParen, next: state.String},
+		{check: IsDigit, emit: EmitRightParen, next: state.Integer},
+		{check: Any, emit: EmitRightParen, next: state.Init},
 	},
 }
 

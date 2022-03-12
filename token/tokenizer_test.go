@@ -106,6 +106,20 @@ func TestTokenizer_Tokenize(t *testing.T) {
 			},
 		},
 		{
+			name: "leftparen",
+			code: `(`,
+			want: []*token.Token{
+				{Kind: kind.LeftParen, Str: "(", Beg: 0, End: 1},
+			},
+		},
+		{
+			name: "rightparen",
+			code: `)`,
+			want: []*token.Token{
+				{Kind: kind.RightParen, Str: ")", Beg: 0, End: 1},
+			},
+		},
+		{
 			name: "quoted plus is a string",
 			code: `"+"`,
 			want: []*token.Token{
@@ -146,6 +160,17 @@ func TestTokenizer_Tokenize(t *testing.T) {
 				{Kind: kind.Integer, Str: "1", Beg: 0, End: 1},
 				{Kind: kind.Divide, Str: "/", Beg: 1, End: 2},
 				{Kind: kind.Integer, Str: "2", Beg: 2, End: 3},
+			},
+		},
+		{
+			name: "res",
+			code: `(1+2)`,
+			want: []*token.Token{
+				{Kind: kind.LeftParen, Str: "(", Beg: 0, End: 1},
+				{Kind: kind.Integer, Str: "1", Beg: 1, End: 2},
+				{Kind: kind.Plus, Str: "+", Beg: 2, End: 3},
+				{Kind: kind.Integer, Str: "2", Beg: 3, End: 4},
+				{Kind: kind.RightParen, Str: ")", Beg: 4, End: 5},
 			},
 		},
 		{

@@ -64,3 +64,21 @@ func EmitDivide(tk *Tokenizer) *Token {
 		End:  tk.cur,
 	}
 }
+
+func EmitLeftParen(tk *Tokenizer) *Token {
+	return &Token{
+		Kind: kind.LeftParen,
+		Str:  tk.code[tk.beg:tk.cur],
+		Beg:  tk.beg,
+		End:  tk.cur,
+	}
+}
+
+func EmitRightParen(tk *Tokenizer) *Token {
+	return &Token{
+		Kind: kind.RightParen,
+		Str:  tk.code[tk.beg:tk.cur],
+		Beg:  tk.beg,
+		End:  tk.cur,
+	}
+}
