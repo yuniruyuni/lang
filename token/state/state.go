@@ -8,4 +8,9 @@ const (
 	Escape
 	Integer
 	Plus
+	Minus
+	Multiply
+	Divide
+	LeftParen
+	RightParen
 )

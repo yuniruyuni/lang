@@ -6,4 +6,9 @@ const (
 	String = iota
 	Integer
 	Plus
+	Minus
+	Multiply
+	Divide
+	LeftParen
+	RightParen
 )
