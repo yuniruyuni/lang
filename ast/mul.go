@@ -31,7 +31,7 @@ func (s *Mul) GenBody() IR {
 	rhsBody := s.RHS.GenBody()
 
 	tmpl := `
-		%%%d = add i32 %%%d, %%%d
+		%%%d = mul i32 %%%d, %%%d
 	`
 	body := fmt.Sprintf(
 		tmpl,
