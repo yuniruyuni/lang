@@ -37,3 +37,30 @@ func EmitPlus(tk *Tokenizer) *Token {
 		End:  tk.cur,
 	}
 }
+
+func EmitMinus(tk *Tokenizer) *Token {
+	return &Token{
+		Kind: kind.Minus,
+		Str:  tk.code[tk.beg:tk.cur],
+		Beg:  tk.beg,
+		End:  tk.cur,
+	}
+}
+
+func EmitMultiply(tk *Tokenizer) *Token {
+	return &Token{
+		Kind: kind.Multiply,
+		Str:  tk.code[tk.beg:tk.cur],
+		Beg:  tk.beg,
+		End:  tk.cur,
+	}
+}
+
+func EmitDivide(tk *Tokenizer) *Token {
+	return &Token{
+		Kind: kind.Divide,
+		Str:  tk.code[tk.beg:tk.cur],
+		Beg:  tk.beg,
+		End:  tk.cur,
+	}
+}

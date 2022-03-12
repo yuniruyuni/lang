@@ -85,6 +85,27 @@ func TestTokenizer_Tokenize(t *testing.T) {
 			},
 		},
 		{
+			name: "minus",
+			code: `-`,
+			want: []*token.Token{
+				{Kind: kind.Minus, Str: "-", Beg: 0, End: 1},
+			},
+		},
+		{
+			name: "multiply",
+			code: `*`,
+			want: []*token.Token{
+				{Kind: kind.Multiply, Str: "*", Beg: 0, End: 1},
+			},
+		},
+		{
+			name: "divide",
+			code: `/`,
+			want: []*token.Token{
+				{Kind: kind.Divide, Str: "/", Beg: 0, End: 1},
+			},
+		},
+		{
 			name: "quoted plus is a string",
 			code: `"+"`,
 			want: []*token.Token{
@@ -92,11 +113,38 @@ func TestTokenizer_Tokenize(t *testing.T) {
 			},
 		},
 		{
-			name: "expression",
+			name: "expression plus",
 			code: `1+2`,
 			want: []*token.Token{
 				{Kind: kind.Integer, Str: "1", Beg: 0, End: 1},
 				{Kind: kind.Plus, Str: "+", Beg: 1, End: 2},
+				{Kind: kind.Integer, Str: "2", Beg: 2, End: 3},
+			},
+		},
+		{
+			name: "expression minus",
+			code: `1-2`,
+			want: []*token.Token{
+				{Kind: kind.Integer, Str: "1", Beg: 0, End: 1},
+				{Kind: kind.Minus, Str: "-", Beg: 1, End: 2},
+				{Kind: kind.Integer, Str: "2", Beg: 2, End: 3},
+			},
+		},
+		{
+			name: "term multiply",
+			code: `1*2`,
+			want: []*token.Token{
+				{Kind: kind.Integer, Str: "1", Beg: 0, End: 1},
+				{Kind: kind.Multiply, Str: "*", Beg: 1, End: 2},
+				{Kind: kind.Integer, Str: "2", Beg: 2, End: 3},
+			},
+		},
+		{
+			name: "term divide",
+			code: `1/2`,
+			want: []*token.Token{
+				{Kind: kind.Integer, Str: "1", Beg: 0, End: 1},
+				{Kind: kind.Divide, Str: "/", Beg: 1, End: 2},
 				{Kind: kind.Integer, Str: "2", Beg: 2, End: 3},
 			},
 		},
