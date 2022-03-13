@@ -7,7 +7,7 @@ import (
 
 type Div struct {
 	Result Reg
-	// for `x + y`,
+	// for `x / y`,
 	LHS AST // x
 	RHS AST // y
 }

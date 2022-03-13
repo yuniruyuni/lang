@@ -11,13 +11,14 @@ import (
 
 // Parser transforms this language into AST.
 // --- PEG ---
+// AST Emit will happen for x in [x].
 // Root := Expr | Res | String
 // Expr := Term Add | Term Sub | Term
-// Add := + Expr
-// Sub := - Expr
+// [Add] := + Expr
+// [Sub] := - Expr
 // Term := Res Mul | Res Div | Res
-// Mul := * Term
-// Div := / Term
+// [Mul] := * Term
+// [Div] := / Term
 // Res := Clause | Integer
 // Clause := ( Expr )
 type Parser struct {
