@@ -9,245 +9,159 @@ import (
 	"github.com/yuniruyuni/lang/token/kind"
 )
 
+// Pos is the position for parsing code.
+type Pos int
+
+// NonTerminal expresses non-terminal symbol in parser.
+type NonTerminal func(Pos) (Pos, ast.AST, error)
+
 // Parser transforms this language into AST.
 // --- PEG ---
 // AST Emit will happen for x in [x].
 // Root := Expr | Res | String
-// Expr := Term Add | Term Sub | Term
-// [Add] := + Expr
-// [Sub] := - Expr
-// Term := Res Mul | Res Div | Res
-// [Mul] := * Term
-// [Div] := / Term
+// Expr := Add | Sub | Term
+// [Add] := Term + Expr
+// [Sub] := Term - Expr
+// Term := Mul | Div | Res
+// [Mul] := Res * Term
+// [Div] := Res / Term
 // Res := Clause | Integer
 // Clause := ( Expr )
 type Parser struct {
-	cur    int
 	tokens []*token.Token
 }
 
-func (p *Parser) Advance(n int) {
-	p.cur += n
+func (p *Parser) Len() Pos {
+	return Pos(len(p.tokens))
 }
 
-func (p *Parser) Revert(n int) {
-	p.cur -= n
-}
-
-func (p *Parser) LookAt(n int) *token.Token {
-	at := p.cur + n
-	if at < len(p.tokens) {
+func (p *Parser) LookAt(at Pos) *token.Token {
+	if at < p.Len() {
 		return p.tokens[at]
 	}
 	return nil
 }
 
-func (p *Parser) Consume(kind kind.Kind) *token.Token {
-	t := p.LookAt(0)
+func (p *Parser) Skip(kind kind.Kind) NonTerminal {
+	return func(at Pos) (Pos, ast.AST, error) {
+		nx, t := p.Consume(kind, at)
+		if t == nil {
+			return at, nil, errors.New("invalid token")
+		}
+		return nx, nil, nil
+	}
+}
+
+func (p *Parser) Consume(kind kind.Kind, at Pos) (Pos, *token.Token) {
+	t := p.LookAt(at)
 	if t == nil || t.Kind != kind {
-		return nil
+		return at, nil
 	}
-	p.Advance(1)
-	return t
+	return at + 1, t
 }
 
-func (p *Parser) End() bool {
-	return p.cur == len(p.tokens)
+func (p *Parser) End(at Pos) bool {
+	return at == p.Len()
 }
 
-func (p *Parser) Root() (ast.AST, error) {
-	cands := []func() (ast.AST, error){
+func (p *Parser) Root(at Pos) (Pos, ast.AST, error) {
+	nx, parsed, err := Select(p.Expr, p.Res, p.String)(at)
+	if err != nil {
+		return at, nil, err
+	}
+
+	if !p.End(nx) {
+		return at, nil, errors.New("invalid tokens")
+	}
+
+	return nx, parsed, nil
+}
+
+func (p *Parser) Expr(at Pos) (Pos, ast.AST, error) {
+	return Select(p.Add, p.Sub, p.Term)(at)
+}
+
+func (p *Parser) Add(at Pos) (Pos, ast.AST, error) {
+	return Concat(
+		func(asts []ast.AST) ast.AST {
+			return &ast.Add{LHS: asts[0], RHS: asts[2]}
+		},
+		p.Term,
+		p.Skip(kind.Plus),
 		p.Expr,
+	)(at)
+}
+
+func (p *Parser) Sub(at Pos) (Pos, ast.AST, error) {
+	return Concat(
+		func(asts []ast.AST) ast.AST {
+			return &ast.Sub{LHS: asts[0], RHS: asts[2]}
+		},
+		p.Term,
+		p.Skip(kind.Minus),
+		p.Expr,
+	)(at)
+}
+
+func (p *Parser) Term(at Pos) (Pos, ast.AST, error) {
+	return Select(p.Mul, p.Div, p.Res)(at)
+}
+
+func (p *Parser) Mul(at Pos) (Pos, ast.AST, error) {
+	return Concat(
+		func(asts []ast.AST) ast.AST {
+			return &ast.Mul{LHS: asts[0], RHS: asts[2]}
+		},
 		p.Res,
-		p.String,
-	}
-
-	for _, cand := range cands {
-		parsed, err := cand()
-		if err != nil {
-			continue
-		}
-		if p.End() {
-			return parsed, nil
-		}
-	}
-
-	return nil, errors.New("invalid tokens")
+		p.Skip(kind.Multiply),
+		p.Term,
+	)(at)
 }
 
-func (p *Parser) Expr() (ast.AST, error) {
-	lhs, err := p.Term()
-	if err != nil {
-		return nil, err
+func (p *Parser) Div(at Pos) (Pos, ast.AST, error) {
+	m := func(asts []ast.AST) ast.AST {
+		return &ast.Div{LHS: asts[0], RHS: asts[2]}
 	}
-
-	cands := []func(ast.AST) (ast.AST, error){
-		p.Add,
-		p.Sub,
-	}
-
-	for _, cand := range cands {
-		parsed, err := cand(lhs)
-		if err == nil {
-			return parsed, nil
-		}
-	}
-
-	return lhs, nil
+	return Concat(m, p.Res, p.Skip(kind.Divide), p.Term)(at)
 }
 
-func (p *Parser) Add(lhs ast.AST) (ast.AST, error) {
-	pls := p.Consume(kind.Plus)
-	if pls == nil {
-		return nil, errors.New("invalid tokens")
-	}
-
-	rhs, err := p.Expr()
-	if err != nil {
-		p.Revert(1)
-		return lhs, nil
-	}
-
-	return &ast.Add{
-		LHS: lhs,
-		RHS: rhs,
-	}, nil
+func (p *Parser) Res(at Pos) (Pos, ast.AST, error) {
+	return Select(p.Clause, p.Integer)(at)
 }
 
-func (p *Parser) Sub(lhs ast.AST) (ast.AST, error) {
-	mns := p.Consume(kind.Minus)
-	if mns == nil {
-		return nil, errors.New("invalid tokens")
-	}
-
-	rhs, err := p.Expr()
-	if err != nil {
-		p.Revert(1)
-		return lhs, nil
-	}
-
-	return &ast.Sub{
-		LHS: lhs,
-		RHS: rhs,
-	}, nil
+func (p *Parser) Clause(at Pos) (Pos, ast.AST, error) {
+	return Concat(
+		func(asts []ast.AST) ast.AST { return asts[1] },
+		p.Skip(kind.LeftParen),
+		p.Expr,
+		p.Skip(kind.RightParen),
+	)(at)
 }
 
-func (p *Parser) Term() (ast.AST, error) {
-	lhs, err := p.Res()
-	if err != nil {
-		return nil, err
-	}
-
-	cands := []func(ast.AST) (ast.AST, error){
-		p.Mul,
-		p.Div,
-	}
-
-	for _, cand := range cands {
-		parsed, err := cand(lhs)
-		if err == nil {
-			return parsed, nil
-		}
-	}
-
-	return lhs, nil
-}
-
-func (p *Parser) Mul(lhs ast.AST) (ast.AST, error) {
-	mul := p.Consume(kind.Multiply)
-	if mul == nil {
-		return nil, errors.New("invalid tokens")
-	}
-
-	rhs, err := p.Term()
-	if err != nil {
-		p.Revert(1)
-		return lhs, nil
-	}
-
-	return &ast.Mul{
-		LHS: lhs,
-		RHS: rhs,
-	}, nil
-}
-
-func (p *Parser) Div(lhs ast.AST) (ast.AST, error) {
-	div := p.Consume(kind.Divide)
-	if div == nil {
-		return nil, errors.New("invalid tokens")
-	}
-
-	rhs, err := p.Term()
-	if err != nil {
-		p.Revert(1)
-		return lhs, nil
-	}
-
-	return &ast.Div{
-		LHS: lhs,
-		RHS: rhs,
-	}, nil
-}
-
-func (p *Parser) Res() (ast.AST, error) {
-	cands := []func() (ast.AST, error){
-		p.Clause,
-		p.Integer,
-	}
-
-	for _, cand := range cands {
-		parsed, err := cand()
-		if err == nil {
-			return parsed, nil
-		}
-	}
-
-	return nil, errors.New("invalid token")
-}
-
-func (p *Parser) Clause() (ast.AST, error) {
-	lp := p.Consume(kind.LeftParen)
-	if lp == nil {
-		return nil, errors.New("invalid token")
-	}
-
-	child, err := p.Expr()
-	if err != nil {
-		p.Revert(1)
-		return nil, err
-	}
-
-	rp := p.Consume(kind.RightParen)
-	if rp == nil {
-		p.Revert(2)
-		return nil, errors.New("invalid token")
-	}
-
-	return child, nil
-}
-
-func (p *Parser) Integer() (ast.AST, error) {
-	t := p.Consume(kind.Integer)
+func (p *Parser) Integer(at Pos) (Pos, ast.AST, error) {
+	nx := at
+	nx, t := p.Consume(kind.Integer, nx)
 	if t == nil {
-		return nil, errors.New("invalid token")
+		return at, nil, errors.New("invalid token")
 	}
 
 	val, err := strconv.Atoi(t.Str)
 	if err != nil {
-		return nil, errors.New("Integer constant size over than max bit size")
+		return at, nil, errors.New("Integer constant size over than max bit size")
 	}
-	return &ast.Integer{Value: val}, nil
+	return nx, &ast.Integer{Value: val}, nil
 }
 
-func (p *Parser) String() (ast.AST, error) {
-	t := p.Consume(kind.String)
+func (p *Parser) String(at Pos) (Pos, ast.AST, error) {
+	nx, t := p.Consume(kind.String, at)
 	if t == nil {
-		return nil, errors.New("invalid token")
+		return at, nil, errors.New("invalid token")
 	}
-	return &ast.String{Word: t.Str}, nil
+	return nx, &ast.String{Word: t.Str}, nil
 }
 
 func Parse(tks []*token.Token) (ast.AST, error) {
-	parser := Parser{cur: 0, tokens: tks}
-	return parser.Root()
+	parser := Parser{tokens: tks}
+	_, ast, err := parser.Root(0)
+	return ast, err
 }
