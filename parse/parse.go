@@ -58,6 +58,16 @@ func (p *Parser) LookAt(at Pos) *token.Token {
 	return nil
 }
 
+func (p *Parser) Skip(kind kind.Kind) NonTerminal {
+	return func(at Pos) (Pos, ast.AST, error) {
+		nx, t := p.Consume(kind, at)
+		if t == nil {
+			return at, nil, errors.New("invalid token")
+		}
+		return nx, nil, nil
+	}
+}
+
 func (p *Parser) Consume(kind kind.Kind, at Pos) (Pos, *token.Token) {
 	t := p.LookAt(at)
 	if t == nil || t.Kind != kind {
@@ -94,9 +104,9 @@ func (p *Parser) Add(at Pos) (Pos, ast.AST, error) {
 		return at, nil, err
 	}
 
-	nx, pls := p.Consume(kind.Plus, nx)
-	if pls == nil {
-		return at, nil, errors.New("invalid tokens")
+	nx, _, err = p.Skip(kind.Plus)(nx)
+	if err != nil {
+		return at, nil, err
 	}
 
 	nx, rhs, err := p.Expr(nx)
@@ -114,9 +124,9 @@ func (p *Parser) Sub(at Pos) (Pos, ast.AST, error) {
 		return at, nil, err
 	}
 
-	nx, mns := p.Consume(kind.Minus, nx)
-	if mns == nil {
-		return at, nil, errors.New("invalid tokens")
+	nx, _, err = p.Skip(kind.Minus)(nx)
+	if err != nil {
+		return at, nil, err
 	}
 
 	nx, rhs, err := p.Expr(nx)
@@ -138,9 +148,9 @@ func (p *Parser) Mul(at Pos) (Pos, ast.AST, error) {
 		return at, nil, err
 	}
 
-	nx, mul := p.Consume(kind.Multiply, nx)
-	if mul == nil {
-		return at, nil, errors.New("invalid tokens")
+	nx, _, err = p.Skip(kind.Multiply)(nx)
+	if err != nil {
+		return at, nil, err
 	}
 
 	nx, rhs, err := p.Term(nx)
@@ -158,9 +168,9 @@ func (p *Parser) Div(at Pos) (Pos, ast.AST, error) {
 		return at, nil, err
 	}
 
-	nx, div := p.Consume(kind.Divide, nx)
-	if div == nil {
-		return at, nil, errors.New("invalid tokens")
+	nx, _, err = p.Skip(kind.Divide)(nx)
+	if err != nil {
+		return at, nil, err
 	}
 
 	nx, rhs, err := p.Term(nx)
@@ -177,9 +187,10 @@ func (p *Parser) Res(at Pos) (Pos, ast.AST, error) {
 
 func (p *Parser) Clause(at Pos) (Pos, ast.AST, error) {
 	nx := at
-	nx, lp := p.Consume(kind.LeftParen, nx)
-	if lp == nil {
-		return at, nil, errors.New("invalid token")
+
+	nx, _, err := p.Skip(kind.LeftParen)(nx)
+	if err != nil {
+		return at, nil, err
 	}
 
 	nx, child, err := p.Expr(nx)
@@ -187,9 +198,9 @@ func (p *Parser) Clause(at Pos) (Pos, ast.AST, error) {
 		return at, nil, err
 	}
 
-	nx, rp := p.Consume(kind.RightParen, nx)
-	if rp == nil {
-		return at, nil, errors.New("invalid token")
+	nx, _, err = p.Skip(kind.RightParen)(nx)
+	if err != nil {
+		return at, nil, err
 	}
 
 	return nx, child, nil
