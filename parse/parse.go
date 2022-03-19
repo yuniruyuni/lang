@@ -12,6 +12,25 @@ import (
 // Pos is the position for parsing code.
 type Pos int
 
+// NonTerminal expresses non-terminal symbol in parser.
+type NonTerminal func(Pos) (Pos, ast.AST, error)
+
+// Select combines some target NonTerminals into single NonTerminal.
+// This new NonTerminal checks if targets match current tokens and
+// returns first maching NonTerminal result.
+// If there is no maching NonTerminal, It returns an "invalid tokens" error.
+func Select(cands ...NonTerminal) NonTerminal {
+	return func(at Pos) (Pos, ast.AST, error) {
+		for _, cand := range cands {
+			nx, parsed, err := cand(at)
+			if err == nil {
+				return nx, parsed, nil
+			}
+		}
+		return at, nil, errors.New("invalid tokens")
+	}
+}
+
 // Parser transforms this language into AST.
 // --- PEG ---
 // AST Emit will happen for x in [x].
@@ -52,40 +71,20 @@ func (p *Parser) End(at Pos) bool {
 }
 
 func (p *Parser) Root(at Pos) (Pos, ast.AST, error) {
-	cands := []func(Pos) (Pos, ast.AST, error){
-		p.Expr,
-		p.Res,
-		p.String,
+	nx, parsed, err := Select(p.Expr, p.Res, p.String)(at)
+	if err != nil {
+		return at, nil, err
 	}
 
-	for _, cand := range cands {
-		nx, parsed, err := cand(at)
-		if err != nil {
-			continue
-		}
-		if p.End(nx) {
-			return nx, parsed, nil
-		}
+	if !p.End(nx) {
+		return at, nil, errors.New("invalid tokens")
 	}
 
-	return at, nil, errors.New("invalid tokens")
+	return nx, parsed, nil
 }
 
 func (p *Parser) Expr(at Pos) (Pos, ast.AST, error) {
-	cands := []func(Pos) (Pos, ast.AST, error){
-		p.Add,
-		p.Sub,
-		p.Term,
-	}
-
-	for _, cand := range cands {
-		nx, parsed, err := cand(at)
-		if err == nil {
-			return nx, parsed, nil
-		}
-	}
-
-	return at, nil, errors.New("invalid token")
+	return Select(p.Add, p.Sub, p.Term)(at)
 }
 
 func (p *Parser) Add(at Pos) (Pos, ast.AST, error) {
@@ -129,20 +128,7 @@ func (p *Parser) Sub(at Pos) (Pos, ast.AST, error) {
 }
 
 func (p *Parser) Term(at Pos) (Pos, ast.AST, error) {
-	cands := []func(Pos) (Pos, ast.AST, error){
-		p.Mul,
-		p.Div,
-		p.Res,
-	}
-
-	for _, cand := range cands {
-		nx, parsed, err := cand(at)
-		if err == nil {
-			return nx, parsed, nil
-		}
-	}
-
-	return at, nil, errors.New("invalid token")
+	return Select(p.Mul, p.Div, p.Res)(at)
 }
 
 func (p *Parser) Mul(at Pos) (Pos, ast.AST, error) {
@@ -186,19 +172,7 @@ func (p *Parser) Div(at Pos) (Pos, ast.AST, error) {
 }
 
 func (p *Parser) Res(at Pos) (Pos, ast.AST, error) {
-	cands := []func(Pos) (Pos, ast.AST, error){
-		p.Clause,
-		p.Integer,
-	}
-
-	for _, cand := range cands {
-		nx, parsed, err := cand(at)
-		if err == nil {
-			return nx, parsed, nil
-		}
-	}
-
-	return at, nil, errors.New("invalid token")
+	return Select(p.Clause, p.Integer)(at)
 }
 
 func (p *Parser) Clause(at Pos) (Pos, ast.AST, error) {
