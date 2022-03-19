@@ -31,6 +31,31 @@ func Select(cands ...NonTerminal) NonTerminal {
 	}
 }
 
+type Merger func([]ast.AST) ast.AST
+
+// Concat combines NonTerminals sequence into single NonTerminal.
+// This new NonTerminal checks if sequence match from current tokens and
+// call Merger by matched ASTs then the Merger's result return.
+// If there is a non-matched NonTerminal,
+// It returns the error of the NonTerminal.
+func Concat(m Merger, cands ...NonTerminal) NonTerminal {
+	return func(at Pos) (Pos, ast.AST, error) {
+		asts := make([]ast.AST, 0, len(cands))
+
+		nx := at
+		for _, cand := range cands {
+			var parsed ast.AST
+			var err error
+			nx, parsed, err = cand(nx)
+			if err != nil {
+				return at, nil, err
+			}
+			asts = append(asts, parsed)
+		}
+		return nx, m(asts), nil
+	}
+}
+
 // Parser transforms this language into AST.
 // --- PEG ---
 // AST Emit will happen for x in [x].
@@ -98,43 +123,25 @@ func (p *Parser) Expr(at Pos) (Pos, ast.AST, error) {
 }
 
 func (p *Parser) Add(at Pos) (Pos, ast.AST, error) {
-	nx := at
-	nx, lhs, err := p.Term(nx)
-	if err != nil {
-		return at, nil, err
-	}
-
-	nx, _, err = p.Skip(kind.Plus)(nx)
-	if err != nil {
-		return at, nil, err
-	}
-
-	nx, rhs, err := p.Expr(nx)
-	if err != nil {
-		return at, nil, err
-	}
-
-	return nx, &ast.Add{LHS: lhs, RHS: rhs}, nil
+	return Concat(
+		func(asts []ast.AST) ast.AST {
+			return &ast.Add{LHS: asts[0], RHS: asts[2]}
+		},
+		p.Term,
+		p.Skip(kind.Plus),
+		p.Expr,
+	)(at)
 }
 
 func (p *Parser) Sub(at Pos) (Pos, ast.AST, error) {
-	nx := at
-	nx, lhs, err := p.Term(nx)
-	if err != nil {
-		return at, nil, err
-	}
-
-	nx, _, err = p.Skip(kind.Minus)(nx)
-	if err != nil {
-		return at, nil, err
-	}
-
-	nx, rhs, err := p.Expr(nx)
-	if err != nil {
-		return at, nil, err
-	}
-
-	return nx, &ast.Sub{LHS: lhs, RHS: rhs}, nil
+	return Concat(
+		func(asts []ast.AST) ast.AST {
+			return &ast.Sub{LHS: asts[0], RHS: asts[2]}
+		},
+		p.Term,
+		p.Skip(kind.Minus),
+		p.Expr,
+	)(at)
 }
 
 func (p *Parser) Term(at Pos) (Pos, ast.AST, error) {
@@ -142,43 +149,21 @@ func (p *Parser) Term(at Pos) (Pos, ast.AST, error) {
 }
 
 func (p *Parser) Mul(at Pos) (Pos, ast.AST, error) {
-	nx := at
-	nx, lhs, err := p.Res(nx)
-	if err != nil {
-		return at, nil, err
-	}
-
-	nx, _, err = p.Skip(kind.Multiply)(nx)
-	if err != nil {
-		return at, nil, err
-	}
-
-	nx, rhs, err := p.Term(nx)
-	if err != nil {
-		return at, nil, err
-	}
-
-	return nx, &ast.Mul{LHS: lhs, RHS: rhs}, nil
+	return Concat(
+		func(asts []ast.AST) ast.AST {
+			return &ast.Mul{LHS: asts[0], RHS: asts[2]}
+		},
+		p.Res,
+		p.Skip(kind.Multiply),
+		p.Term,
+	)(at)
 }
 
 func (p *Parser) Div(at Pos) (Pos, ast.AST, error) {
-	nx := at
-	nx, lhs, err := p.Res(nx)
-	if err != nil {
-		return at, nil, err
+	m := func(asts []ast.AST) ast.AST {
+		return &ast.Div{LHS: asts[0], RHS: asts[2]}
 	}
-
-	nx, _, err = p.Skip(kind.Divide)(nx)
-	if err != nil {
-		return at, nil, err
-	}
-
-	nx, rhs, err := p.Term(nx)
-	if err != nil {
-		return at, nil, err
-	}
-
-	return nx, &ast.Div{LHS: lhs, RHS: rhs}, nil
+	return Concat(m, p.Res, p.Skip(kind.Divide), p.Term)(at)
 }
 
 func (p *Parser) Res(at Pos) (Pos, ast.AST, error) {
@@ -186,24 +171,12 @@ func (p *Parser) Res(at Pos) (Pos, ast.AST, error) {
 }
 
 func (p *Parser) Clause(at Pos) (Pos, ast.AST, error) {
-	nx := at
-
-	nx, _, err := p.Skip(kind.LeftParen)(nx)
-	if err != nil {
-		return at, nil, err
-	}
-
-	nx, child, err := p.Expr(nx)
-	if err != nil {
-		return at, nil, err
-	}
-
-	nx, _, err = p.Skip(kind.RightParen)(nx)
-	if err != nil {
-		return at, nil, err
-	}
-
-	return nx, child, nil
+	return Concat(
+		func(asts []ast.AST) ast.AST { return asts[1] },
+		p.Skip(kind.LeftParen),
+		p.Expr,
+		p.Skip(kind.RightParen),
+	)(at)
 }
 
 func (p *Parser) Integer(at Pos) (Pos, ast.AST, error) {
