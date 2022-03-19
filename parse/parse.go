@@ -15,47 +15,6 @@ type Pos int
 // NonTerminal expresses non-terminal symbol in parser.
 type NonTerminal func(Pos) (Pos, ast.AST, error)
 
-// Select combines some target NonTerminals into single NonTerminal.
-// This new NonTerminal checks if targets match current tokens and
-// returns first maching NonTerminal result.
-// If there is no maching NonTerminal, It returns an "invalid tokens" error.
-func Select(cands ...NonTerminal) NonTerminal {
-	return func(at Pos) (Pos, ast.AST, error) {
-		for _, cand := range cands {
-			nx, parsed, err := cand(at)
-			if err == nil {
-				return nx, parsed, nil
-			}
-		}
-		return at, nil, errors.New("invalid tokens")
-	}
-}
-
-type Merger func([]ast.AST) ast.AST
-
-// Concat combines NonTerminals sequence into single NonTerminal.
-// This new NonTerminal checks if sequence match from current tokens and
-// call Merger by matched ASTs then the Merger's result return.
-// If there is a non-matched NonTerminal,
-// It returns the error of the NonTerminal.
-func Concat(m Merger, cands ...NonTerminal) NonTerminal {
-	return func(at Pos) (Pos, ast.AST, error) {
-		asts := make([]ast.AST, 0, len(cands))
-
-		nx := at
-		for _, cand := range cands {
-			var parsed ast.AST
-			var err error
-			nx, parsed, err = cand(nx)
-			if err != nil {
-				return at, nil, err
-			}
-			asts = append(asts, parsed)
-		}
-		return nx, m(asts), nil
-	}
-}
-
 // Parser transforms this language into AST.
 // --- PEG ---
 // AST Emit will happen for x in [x].
