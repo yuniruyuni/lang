@@ -6,16 +6,25 @@ import (
 
 type Emitter func(t *Tokenizer) *Token
 
-func Skip(_ *Tokenizer) *Token {
+func Save(tk *Tokenizer) *Token {
 	return nil
+}
+
+func Skip(tk *Tokenizer) *Token {
+	return &Token{
+		Kind: kind.Skip,
+		Str:  tk.code[tk.beg:tk.cur],
+		Beg:  tk.beg,
+		End:  tk.cur,
+	}
 }
 
 func EmitString(tk *Tokenizer) *Token {
 	t := &Token{
 		Kind: kind.String,
-		Str:  tk.code[tk.beg+1 : tk.cur],
+		Str:  tk.code[tk.beg+1 : tk.cur-1],
 		Beg:  tk.beg + 1,
-		End:  tk.cur,
+		End:  tk.cur - 1,
 	}
 	return t
 }
