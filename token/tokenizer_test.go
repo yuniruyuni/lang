@@ -163,6 +163,25 @@ func TestTokenizer_Tokenize(t *testing.T) {
 			},
 		},
 		{
+			name: "cond less",
+			code: `1<2`,
+			want: []*token.Token{
+				{Kind: kind.Integer, Str: "1", Beg: 0, End: 1},
+				{Kind: kind.Less, Str: "<", Beg: 1, End: 2},
+				{Kind: kind.Integer, Str: "2", Beg: 2, End: 3},
+			},
+		},
+		{
+			name: "cond equal",
+			code: `1==2`,
+			want: []*token.Token{
+				{Kind: kind.Integer, Str: "1", Beg: 0, End: 1},
+				{Kind: kind.Equal, Str: "=", Beg: 1, End: 2},
+				{Kind: kind.Equal, Str: "=", Beg: 2, End: 3},
+				{Kind: kind.Integer, Str: "2", Beg: 3, End: 4},
+			},
+		},
+		{
 			name: "res",
 			code: `(1+2)`,
 			want: []*token.Token{

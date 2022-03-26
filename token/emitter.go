@@ -82,3 +82,21 @@ func EmitRightParen(tk *Tokenizer) *Token {
 		End:  tk.cur,
 	}
 }
+
+func EmitLess(tk *Tokenizer) *Token {
+	return &Token{
+		Kind: kind.Less,
+		Str:  tk.code[tk.beg:tk.cur],
+		Beg:  tk.beg,
+		End:  tk.cur,
+	}
+}
+
+func EmitEqual(tk *Tokenizer) *Token {
+	return &Token{
+		Kind: kind.Equal,
+		Str:  tk.code[tk.beg:tk.cur],
+		Beg:  tk.beg,
+		End:  tk.cur,
+	}
+}
