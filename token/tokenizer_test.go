@@ -23,37 +23,37 @@ func TestTokenizer_Tokenize(t *testing.T) {
 		},
 		{
 			name: "single string",
-			code: "\"test\"",
+			code: `"test"`,
 			want: []*token.Token{
-				{Kind: kind.String, Str: "test", Beg: 1, End: 5},
+				{Kind: kind.String, Str: `"test"`, Beg: 0, End: 6},
 			},
 		},
 		{
 			name: "with space",
-			code: " \"test\"",
+			code: ` "test"`,
 			want: []*token.Token{
-				{Kind: kind.String, Str: "test", Beg: 2, End: 6},
+				{Kind: kind.String, Str: `"test"`, Beg: 1, End: 7},
 			},
 		},
 		{
 			name: "with tab",
 			code: "\t\"test\"",
 			want: []*token.Token{
-				{Kind: kind.String, Str: "test", Beg: 2, End: 6},
+				{Kind: kind.String, Str: `"test"`, Beg: 1, End: 7},
 			},
 		},
 		{
 			name: "with space right",
-			code: "\"test\" ",
+			code: `"test" `,
 			want: []*token.Token{
-				{Kind: kind.String, Str: "test", Beg: 1, End: 5},
+				{Kind: kind.String, Str: `"test"`, Beg: 0, End: 6},
 			},
 		},
 		{
 			name: "with tab right",
 			code: "\"test\"\t",
 			want: []*token.Token{
-				{Kind: kind.String, Str: "test", Beg: 1, End: 5},
+				{Kind: kind.String, Str: `"test"`, Beg: 0, End: 6},
 			},
 		},
 		{
@@ -74,7 +74,7 @@ func TestTokenizer_Tokenize(t *testing.T) {
 			name: "quoted digit string",
 			code: `"1"`,
 			want: []*token.Token{
-				{Kind: kind.String, Str: "1", Beg: 1, End: 2},
+				{Kind: kind.String, Str: `"1"`, Beg: 0, End: 3},
 			},
 		},
 		{
@@ -123,7 +123,7 @@ func TestTokenizer_Tokenize(t *testing.T) {
 			name: "quoted plus is a string",
 			code: `"+"`,
 			want: []*token.Token{
-				{Kind: kind.String, Str: "+", Beg: 1, End: 2},
+				{Kind: kind.String, Str: `"+"`, Beg: 0, End: 3},
 			},
 		},
 		{
@@ -214,9 +214,9 @@ func TestTokenizer_Tokenize(t *testing.T) {
 			name: "string expression",
 			code: `"abc"+"def"`,
 			want: []*token.Token{
-				{Kind: kind.String, Str: "abc", Beg: 1, End: 4},
+				{Kind: kind.String, Str: `"abc"`, Beg: 0, End: 5},
 				{Kind: kind.Plus, Str: "+", Beg: 5, End: 6},
-				{Kind: kind.String, Str: "def", Beg: 7, End: 10},
+				{Kind: kind.String, Str: `"def"`, Beg: 6, End: 11},
 			},
 		},
 		{
@@ -224,7 +224,7 @@ func TestTokenizer_Tokenize(t *testing.T) {
 			code: `123"def"`,
 			want: []*token.Token{
 				{Kind: kind.Integer, Str: "123", Beg: 0, End: 3},
-				{Kind: kind.String, Str: "def", Beg: 4, End: 7},
+				{Kind: kind.String, Str: `"def"`, Beg: 3, End: 8},
 			},
 		},
 	}

@@ -187,7 +187,8 @@ func (p *Parser) String(at Pos) (Pos, ast.AST, error) {
 	if t == nil {
 		return at, nil, errors.New("invalid token")
 	}
-	return nx, &ast.String{Word: t.Str}, nil
+	word := t.Str[1 : len(t.Str)-1]
+	return nx, &ast.String{Word: word}, nil
 }
 
 func Parse(tks []*token.Token) (ast.AST, error) {

@@ -23,7 +23,7 @@ func TestParse(t *testing.T) {
 		{
 			name: `"abc" parses into String(word:"abc")`,
 			tokens: []*token.Token{
-				{Kind: kind.String, Str: "abc", Beg: 1, End: 4},
+				{Kind: kind.String, Str: `"abc"`, Beg: 0, End: 5},
 			},
 			want:    &ast.String{Word: "abc"},
 			wantErr: false,
