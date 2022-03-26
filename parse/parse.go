@@ -28,8 +28,9 @@ type NonTerminal func(Pos) (Pos, ast.AST, error)
 // Term := Mul | Div | Res
 // [Mul] := Res * Term
 // [Div] := Res / Term
-// Res := Clause | Integer
+// Res := If | Clause | Integer
 // Clause := ( Cond )
+// If := if Cond { Cond } else { Cond }
 type Parser struct {
 	tokens []*token.Token
 }
@@ -156,15 +157,36 @@ func (p *Parser) Div(at Pos) (Pos, ast.AST, error) {
 }
 
 func (p *Parser) Res(at Pos) (Pos, ast.AST, error) {
-	return Select(p.Clause, p.Integer)(at)
+	return Select(p.If, p.Clause, p.Integer)(at)
 }
 
 func (p *Parser) Clause(at Pos) (Pos, ast.AST, error) {
 	return Concat(
 		func(asts []ast.AST) ast.AST { return asts[1] },
 		p.Skip(kind.LeftParen),
-		p.Expr,
+		p.Cond,
 		p.Skip(kind.RightParen),
+	)(at)
+}
+
+func (p *Parser) If(at Pos) (Pos, ast.AST, error) {
+	return Concat(
+		func(asts []ast.AST) ast.AST {
+			return &ast.If{
+				Cond: asts[1],
+				Then: asts[3],
+				Else: asts[7],
+			}
+		},
+		p.Skip(kind.If),
+		p.Cond,
+		p.Skip(kind.LeftCurly),
+		p.Cond,
+		p.Skip(kind.RightCurly),
+		p.Skip(kind.Else),
+		p.Skip(kind.LeftCurly),
+		p.Cond,
+		p.Skip(kind.RightCurly),
 	)(at)
 }
 

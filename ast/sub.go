@@ -16,6 +16,10 @@ func (s *Sub) ResultReg() Reg {
 	return s.Result
 }
 
+func (s *Sub) ResultLabel() Label {
+	return s.RHS.ResultLabel()
+}
+
 func (s *Sub) AcquireReg(g *Gen) {
 	s.LHS.AcquireReg(g)
 	s.RHS.AcquireReg(g)

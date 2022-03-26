@@ -15,6 +15,10 @@ func (s *String) ResultReg() Reg {
 func (s *String) AcquireReg(g *Gen) {
 }
 
+func (s *String) ResultLabel() Label {
+	return 0
+}
+
 const (
 	nullCharSize = 1
 )

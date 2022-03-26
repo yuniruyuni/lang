@@ -22,6 +22,10 @@ func (s *Div) AcquireReg(g *Gen) {
 	s.Result = g.NextReg()
 }
 
+func (s *Div) ResultLabel() Label {
+	return s.RHS.ResultLabel()
+}
+
 func (s *Div) GenHeader() IR {
 	return s.LHS.GenHeader() + s.RHS.GenHeader()
 }

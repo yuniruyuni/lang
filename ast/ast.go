@@ -1,9 +1,11 @@
 package ast
 
 type Reg int
+type Label int
 
 type Gen struct {
-	reg Reg
+	reg   Reg
+	label Label
 }
 
 func (g *Gen) CurReg() Reg {
@@ -15,10 +17,20 @@ func (g *Gen) NextReg() Reg {
 	return g.reg
 }
 
+func (g *Gen) CurLabel() Label {
+	return g.label
+}
+
+func (g *Gen) NextLabel() Label {
+	g.label += 1
+	return g.label
+}
+
 type IR string
 
 type AST interface {
 	ResultReg() Reg
+	ResultLabel() Label
 	AcquireReg(g *Gen)
 
 	GenHeader() IR
