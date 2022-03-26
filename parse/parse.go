@@ -18,7 +18,10 @@ type NonTerminal func(Pos) (Pos, ast.AST, error)
 // Parser transforms this language into AST.
 // --- PEG ---
 // AST Emit will happen for x in [x].
-// Root := Expr | Res | String
+// Root := Cond | Res | String
+// Cond := Less | Equal | Expr
+// [Less] := Expr < Cond
+// [Equal] := Expr == Cond
 // Expr := Add | Sub | Term
 // [Add] := Term + Expr
 // [Sub] := Term - Expr
@@ -26,7 +29,7 @@ type NonTerminal func(Pos) (Pos, ast.AST, error)
 // [Mul] := Res * Term
 // [Div] := Res / Term
 // Res := Clause | Integer
-// Clause := ( Expr )
+// Clause := ( Cond )
 type Parser struct {
 	tokens []*token.Token
 }
@@ -65,7 +68,7 @@ func (p *Parser) End(at Pos) bool {
 }
 
 func (p *Parser) Root(at Pos) (Pos, ast.AST, error) {
-	nx, parsed, err := Select(p.Expr, p.Res, p.String)(at)
+	nx, parsed, err := Select(p.Cond, p.Res, p.String)(at)
 	if err != nil {
 		return at, nil, err
 	}
@@ -75,6 +78,33 @@ func (p *Parser) Root(at Pos) (Pos, ast.AST, error) {
 	}
 
 	return nx, parsed, nil
+}
+
+func (p *Parser) Cond(at Pos) (Pos, ast.AST, error) {
+	return Select(p.Less, p.Equal, p.Expr)(at)
+}
+
+func (p *Parser) Less(at Pos) (Pos, ast.AST, error) {
+	return Concat(
+		func(asts []ast.AST) ast.AST {
+			return &ast.Less{LHS: asts[0], RHS: asts[2]}
+		},
+		p.Expr,
+		p.Skip(kind.Less),
+		p.Cond,
+	)(at)
+}
+
+func (p *Parser) Equal(at Pos) (Pos, ast.AST, error) {
+	return Concat(
+		func(asts []ast.AST) ast.AST {
+			return &ast.Equal{LHS: asts[0], RHS: asts[3]}
+		},
+		p.Expr,
+		p.Skip(kind.Equal),
+		p.Skip(kind.Equal),
+		p.Cond,
+	)(at)
 }
 
 func (p *Parser) Expr(at Pos) (Pos, ast.AST, error) {
