@@ -23,37 +23,37 @@ func TestTokenizer_Tokenize(t *testing.T) {
 		},
 		{
 			name: "single string",
-			code: "\"test\"",
+			code: `"test"`,
 			want: []*token.Token{
-				{Kind: kind.String, Str: "test", Beg: 1, End: 5},
+				{Kind: kind.String, Str: `"test"`, Beg: 0, End: 6},
 			},
 		},
 		{
 			name: "with space",
-			code: " \"test\"",
+			code: ` "test"`,
 			want: []*token.Token{
-				{Kind: kind.String, Str: "test", Beg: 2, End: 6},
+				{Kind: kind.String, Str: `"test"`, Beg: 1, End: 7},
 			},
 		},
 		{
 			name: "with tab",
 			code: "\t\"test\"",
 			want: []*token.Token{
-				{Kind: kind.String, Str: "test", Beg: 2, End: 6},
+				{Kind: kind.String, Str: `"test"`, Beg: 1, End: 7},
 			},
 		},
 		{
 			name: "with space right",
-			code: "\"test\" ",
+			code: `"test" `,
 			want: []*token.Token{
-				{Kind: kind.String, Str: "test", Beg: 1, End: 5},
+				{Kind: kind.String, Str: `"test"`, Beg: 0, End: 6},
 			},
 		},
 		{
 			name: "with tab right",
 			code: "\"test\"\t",
 			want: []*token.Token{
-				{Kind: kind.String, Str: "test", Beg: 1, End: 5},
+				{Kind: kind.String, Str: `"test"`, Beg: 0, End: 6},
 			},
 		},
 		{
@@ -74,7 +74,7 @@ func TestTokenizer_Tokenize(t *testing.T) {
 			name: "quoted digit string",
 			code: `"1"`,
 			want: []*token.Token{
-				{Kind: kind.String, Str: "1", Beg: 1, End: 2},
+				{Kind: kind.String, Str: `"1"`, Beg: 0, End: 3},
 			},
 		},
 		{
@@ -123,7 +123,7 @@ func TestTokenizer_Tokenize(t *testing.T) {
 			name: "quoted plus is a string",
 			code: `"+"`,
 			want: []*token.Token{
-				{Kind: kind.String, Str: "+", Beg: 1, End: 2},
+				{Kind: kind.String, Str: `"+"`, Beg: 0, End: 3},
 			},
 		},
 		{
@@ -163,6 +163,25 @@ func TestTokenizer_Tokenize(t *testing.T) {
 			},
 		},
 		{
+			name: "cond less",
+			code: `1<2`,
+			want: []*token.Token{
+				{Kind: kind.Integer, Str: "1", Beg: 0, End: 1},
+				{Kind: kind.Less, Str: "<", Beg: 1, End: 2},
+				{Kind: kind.Integer, Str: "2", Beg: 2, End: 3},
+			},
+		},
+		{
+			name: "cond equal",
+			code: `1==2`,
+			want: []*token.Token{
+				{Kind: kind.Integer, Str: "1", Beg: 0, End: 1},
+				{Kind: kind.Equal, Str: "=", Beg: 1, End: 2},
+				{Kind: kind.Equal, Str: "=", Beg: 2, End: 3},
+				{Kind: kind.Integer, Str: "2", Beg: 3, End: 4},
+			},
+		},
+		{
 			name: "res",
 			code: `(1+2)`,
 			want: []*token.Token{
@@ -195,9 +214,9 @@ func TestTokenizer_Tokenize(t *testing.T) {
 			name: "string expression",
 			code: `"abc"+"def"`,
 			want: []*token.Token{
-				{Kind: kind.String, Str: "abc", Beg: 1, End: 4},
+				{Kind: kind.String, Str: `"abc"`, Beg: 0, End: 5},
 				{Kind: kind.Plus, Str: "+", Beg: 5, End: 6},
-				{Kind: kind.String, Str: "def", Beg: 7, End: 10},
+				{Kind: kind.String, Str: `"def"`, Beg: 6, End: 11},
 			},
 		},
 		{
@@ -205,7 +224,43 @@ func TestTokenizer_Tokenize(t *testing.T) {
 			code: `123"def"`,
 			want: []*token.Token{
 				{Kind: kind.Integer, Str: "123", Beg: 0, End: 3},
-				{Kind: kind.String, Str: "def", Beg: 4, End: 7},
+				{Kind: kind.String, Str: `"def"`, Beg: 3, End: 8},
+			},
+		},
+		{
+			name: "variable",
+			code: `var`,
+			want: []*token.Token{
+				{Kind: kind.Identifier, Str: "var", Beg: 0, End: 3},
+			},
+		},
+		{
+			name: "if",
+			code: `if`,
+			want: []*token.Token{
+				{Kind: kind.If, Str: "if", Beg: 0, End: 2},
+			},
+		},
+		{
+			name: "else",
+			code: `else`,
+			want: []*token.Token{
+				{Kind: kind.Else, Str: "else", Beg: 0, End: 4},
+			},
+		},
+		{
+			name: "condition",
+			code: `if 1 { 10 } else { 20 }`,
+			want: []*token.Token{
+				{Kind: kind.If, Str: "if", Beg: 0, End: 2},
+				{Kind: kind.Integer, Str: "1", Beg: 3, End: 4},
+				{Kind: kind.LeftCurly, Str: "{", Beg: 5, End: 6},
+				{Kind: kind.Integer, Str: "10", Beg: 7, End: 9},
+				{Kind: kind.RightCurly, Str: "}", Beg: 10, End: 11},
+				{Kind: kind.Else, Str: "else", Beg: 12, End: 16},
+				{Kind: kind.LeftCurly, Str: "{", Beg: 17, End: 18},
+				{Kind: kind.Integer, Str: "20", Beg: 19, End: 21},
+				{Kind: kind.RightCurly, Str: "}", Beg: 22, End: 23},
 			},
 		},
 	}

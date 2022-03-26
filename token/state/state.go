@@ -7,10 +7,5 @@ const (
 	String
 	Escape
 	Integer
-	Plus
-	Minus
-	Multiply
-	Divide
-	LeftParen
-	RightParen
+	Identifier
 )

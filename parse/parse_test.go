@@ -23,7 +23,7 @@ func TestParse(t *testing.T) {
 		{
 			name: `"abc" parses into String(word:"abc")`,
 			tokens: []*token.Token{
-				{Kind: kind.String, Str: "abc", Beg: 1, End: 4},
+				{Kind: kind.String, Str: `"abc"`, Beg: 0, End: 5},
 			},
 			want:    &ast.String{Word: "abc"},
 			wantErr: false,
@@ -65,13 +65,26 @@ func TestParse(t *testing.T) {
 			},
 		},
 		{
-			name: "123/456 parses into Div(lhs:123, rhs:456)",
+			name: "123<456 parses into Less(lhs:123, rhs:456)",
 			tokens: []*token.Token{
 				{Kind: kind.Integer, Str: "123", Beg: 0, End: 3},
-				{Kind: kind.Divide, Str: "/", Beg: 3, End: 4},
+				{Kind: kind.Less, Str: "<", Beg: 3, End: 4},
 				{Kind: kind.Integer, Str: "456", Beg: 4, End: 7},
 			},
-			want: &ast.Div{
+			want: &ast.Less{
+				LHS: &ast.Integer{Value: 123},
+				RHS: &ast.Integer{Value: 456},
+			},
+		},
+		{
+			name: "123==456 parses into Equal(lhs:123, rhs:456)",
+			tokens: []*token.Token{
+				{Kind: kind.Integer, Str: "123", Beg: 0, End: 3},
+				{Kind: kind.Equal, Str: "=", Beg: 3, End: 4},
+				{Kind: kind.Equal, Str: "=", Beg: 4, End: 5},
+				{Kind: kind.Integer, Str: "456", Beg: 5, End: 8},
+			},
+			want: &ast.Equal{
 				LHS: &ast.Integer{Value: 123},
 				RHS: &ast.Integer{Value: 456},
 			},

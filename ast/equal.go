@@ -5,43 +5,48 @@ import (
 	"strings"
 )
 
-type Sub struct {
+type Equal struct {
+	TmpReg Reg
 	Result Reg
-	// for `x - y`,
+	// for `x == y`,
 	LHS AST // x
 	RHS AST // y
 }
 
-func (s *Sub) ResultReg() Reg {
+func (s *Equal) ResultReg() Reg {
 	return s.Result
 }
 
-func (s *Sub) ResultLabel() Label {
+func (s *Equal) ResultLabel() Label {
 	return s.RHS.ResultLabel()
 }
 
-func (s *Sub) AcquireReg(g *Gen) {
+func (s *Equal) AcquireReg(g *Gen) {
 	s.LHS.AcquireReg(g)
 	s.RHS.AcquireReg(g)
+	s.TmpReg = g.NextReg()
 	s.Result = g.NextReg()
 }
 
-func (s *Sub) GenHeader() IR {
+func (s *Equal) GenHeader() IR {
 	return s.LHS.GenHeader() + s.RHS.GenHeader()
 }
 
-func (s *Sub) GenBody() IR {
+func (s *Equal) GenBody() IR {
 	lhsBody := s.LHS.GenBody()
 	rhsBody := s.RHS.GenBody()
 
 	tmpl := `
-		%%%d = sub i32 %%%d, %%%d
+		%%%d = icmp eq i32 %%%d, %%%d
+		%%%d = zext i1 %%%d to i32
 	`
 	body := fmt.Sprintf(
 		tmpl,
-		s.Result,
+		s.TmpReg,
 		s.LHS.ResultReg(),
 		s.RHS.ResultReg(),
+		s.Result,
+		s.TmpReg,
 	)
 
 	bodies := []string{
@@ -53,7 +58,7 @@ func (s *Sub) GenBody() IR {
 	return IR(strings.Join(bodies, "\n"))
 }
 
-func (s *Sub) GenPrinter() IR {
+func (s *Equal) GenPrinter() IR {
 	tmpl := `
 		call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([%d x i8], [%d x i8]* @.%s, i64 0, i64 0), i32 %%%d)
 	`

@@ -1,5 +1,7 @@
 package token
 
+import "unicode"
+
 type Checker func(ch rune) bool
 
 func Ch(want rune) Checker {
@@ -16,4 +18,8 @@ func Any(ch rune) bool {
 
 func IsDigit(ch rune) bool {
 	return '0' <= ch && ch <= '9'
+}
+
+func IsLetter(ch rune) bool {
+	return unicode.IsLetter(ch)
 }

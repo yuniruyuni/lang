@@ -1,6 +1,7 @@
 package token
 
 import (
+	"github.com/yuniruyuni/lang/token/kind"
 	"github.com/yuniruyuni/lang/token/state"
 )
 
@@ -28,7 +29,44 @@ func (t *Tokenizer) emit(tk *Token) {
 
 func (t *Tokenizer) next(pos int, ch rune) {
 	t.cur = pos
-	table.Run(t, ch)
+	for table.Run(t, ch) {
+	}
+}
+
+func (t *Tokenizer) translateIdentifier(tk *Token) *Token {
+	switch tk.Str {
+	case "if":
+		return &Token{
+			Kind: kind.If,
+			Str:  tk.Str,
+			Beg:  tk.Beg,
+			End:  tk.End,
+		}
+	case "else":
+		return &Token{
+			Kind: kind.Else,
+			Str:  tk.Str,
+			Beg:  tk.Beg,
+			End:  tk.End,
+		}
+	default:
+		return tk
+	}
+}
+
+func (t *Tokenizer) translate(tk *Token) *Token {
+	if tk == nil {
+		return nil
+	}
+
+	switch tk.Kind {
+	case kind.Skip:
+		return nil
+	case kind.Identifier:
+		return t.translateIdentifier(tk)
+	default:
+		return tk
+	}
 }
 
 func (t *Tokenizer) Tokenize(code string) []*Token {
@@ -41,5 +79,14 @@ func (t *Tokenizer) Tokenize(code string) []*Token {
 	// 0 is 0-value of rune, it can assume as NULL char.
 	t.next(len(t.code), 0)
 
-	return t.tokens
+	res := make([]*Token, 0, len(t.tokens))
+	for _, tk := range t.tokens {
+		tk = t.translate(tk)
+		if tk == nil {
+			continue
+		}
+		res = append(res, tk)
+	}
+
+	return res
 }

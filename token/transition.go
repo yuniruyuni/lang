@@ -1,6 +1,7 @@
 package token
 
 import (
+	"github.com/yuniruyuni/lang/token/kind"
 	"github.com/yuniruyuni/lang/token/state"
 )
 
@@ -11,93 +12,68 @@ type Edge struct {
 	check Checker
 	emit  Emitter
 	next  state.State
+	retry bool // if true, recheck same character on next state.
 }
 
 var table = Transition{
 	state.Init: Edges{
-		{check: NilCh, emit: Skip, next: state.Init},
-		{check: Ch(' '), emit: Skip, next: state.Init},
-		{check: Ch('\t'), emit: Skip, next: state.Init},
-		{check: Ch('"'), emit: Skip, next: state.String},
-		{check: Ch('+'), emit: Skip, next: state.Plus},
-		{check: Ch('-'), emit: Skip, next: state.Minus},
-		{check: Ch('*'), emit: Skip, next: state.Multiply},
-		{check: Ch('/'), emit: Skip, next: state.Divide},
-		{check: Ch('('), emit: Skip, next: state.LeftParen},
-		{check: Ch(')'), emit: Skip, next: state.RightParen},
-		{check: IsDigit, emit: Skip, next: state.Integer},
+		{check: NilCh, emit: Save, next: state.Init, retry: false},
+		{check: Ch(' '), emit: Emit(kind.Skip), next: state.Init, retry: false},
+		{check: Ch('\t'), emit: Emit(kind.Skip), next: state.Init, retry: false},
+		{check: Ch('"'), emit: Save, next: state.String, retry: false},
+		{check: Ch('+'), emit: Emit(kind.Plus), next: state.Init, retry: false},
+		{check: Ch('-'), emit: Emit(kind.Minus), next: state.Init, retry: false},
+		{check: Ch('*'), emit: Emit(kind.Multiply), next: state.Init, retry: false},
+		{check: Ch('/'), emit: Emit(kind.Divide), next: state.Init, retry: false},
+		{check: Ch('('), emit: Emit(kind.LeftParen), next: state.Init, retry: false},
+		{check: Ch(')'), emit: Emit(kind.RightParen), next: state.Init, retry: false},
+		{check: Ch('{'), emit: Emit(kind.LeftCurly), next: state.Init, retry: false},
+		{check: Ch('}'), emit: Emit(kind.RightCurly), next: state.Init, retry: false},
+		{check: Ch('<'), emit: Emit(kind.Less), next: state.Init, retry: false},
+		{check: Ch('='), emit: Emit(kind.Equal), next: state.Init, retry: false},
+		{check: IsDigit, emit: Save, next: state.Integer, retry: true},
+		{check: IsLetter, emit: Save, next: state.Identifier, retry: true},
 	},
 	state.String: Edges{
-		{check: Ch('"'), emit: EmitString, next: state.Init},
-		{check: Ch('\\'), emit: Skip, next: state.Escape},
+		{check: Ch('"'), emit: Emit(kind.String), next: state.Init, retry: false},
+		{check: Ch('\\'), emit: Save, next: state.Escape, retry: false},
 	},
 	state.Escape: Edges{
-		{check: Any, emit: Skip, next: state.String},
+		{check: Any, emit: Save, next: state.String, retry: false},
 	},
 	state.Integer: Edges{
-		{check: IsDigit, emit: Skip, next: state.Integer},
-		{check: Ch('"'), emit: EmitInteger, next: state.String},
-		{check: Ch('+'), emit: EmitInteger, next: state.Plus},
-		{check: Ch('-'), emit: EmitInteger, next: state.Minus},
-		{check: Ch('*'), emit: EmitInteger, next: state.Multiply},
-		{check: Ch('/'), emit: EmitInteger, next: state.Divide},
-		{check: Ch('('), emit: EmitInteger, next: state.LeftParen},
-		{check: Ch(')'), emit: EmitInteger, next: state.RightParen},
-		{check: Any, emit: EmitInteger, next: state.Init},
+		{check: IsDigit, emit: Save, next: state.Integer, retry: false},
+		{check: Any, emit: Emit(kind.Integer), next: state.Init, retry: true},
 	},
-	state.Plus: Edges{
-		{check: Ch('"'), emit: EmitPlus, next: state.String},
-		{check: IsDigit, emit: EmitPlus, next: state.Integer},
-		{check: Any, emit: EmitPlus, next: state.Init},
-	},
-	state.Minus: Edges{
-		{check: Ch('"'), emit: EmitMinus, next: state.String},
-		{check: IsDigit, emit: EmitMinus, next: state.Integer},
-		{check: Any, emit: EmitMinus, next: state.Init},
-	},
-	state.Multiply: Edges{
-		{check: Ch('"'), emit: EmitMultiply, next: state.String},
-		{check: IsDigit, emit: EmitMultiply, next: state.Integer},
-		{check: Any, emit: EmitMultiply, next: state.Init},
-	},
-	state.Divide: Edges{
-		{check: Ch('"'), emit: EmitDivide, next: state.String},
-		{check: IsDigit, emit: EmitDivide, next: state.Integer},
-		{check: Any, emit: EmitDivide, next: state.Init},
-	},
-	state.LeftParen: Edges{
-		{check: Ch('"'), emit: EmitLeftParen, next: state.String},
-		{check: IsDigit, emit: EmitLeftParen, next: state.Integer},
-		{check: Any, emit: EmitLeftParen, next: state.Init},
-	},
-	state.RightParen: Edges{
-		{check: Ch('"'), emit: EmitRightParen, next: state.String},
-		{check: IsDigit, emit: EmitRightParen, next: state.Integer},
-		{check: Any, emit: EmitRightParen, next: state.Init},
+	state.Identifier: Edges{
+		{check: IsLetter, emit: Save, next: state.Identifier, retry: false},
+		{check: Any, emit: Emit(kind.Identifier), next: state.Init, retry: true},
 	},
 }
 
-func (tr Transition) Run(tk *Tokenizer, ch rune) {
-	tr[tk.State].Run(tk, ch)
+func (tr Transition) Run(tk *Tokenizer, ch rune) bool {
+	return tr[tk.State].Run(tk, ch)
 }
 
-func (es Edges) Run(tk *Tokenizer, ch rune) {
+func (es Edges) Run(tk *Tokenizer, ch rune) bool {
 	for _, e := range es {
 		if !e.check(ch) {
 			continue
 		}
 
+		if !e.retry {
+			tk.cur += 1
+		}
+
 		t := e.emit(tk)
 		if t != nil {
 			tk.emit(t)
-		}
-
-		if tk.State != e.next {
 			tk.beg = tk.cur
 		}
 
 		tk.State = e.next
 
-		return
+		return e.retry
 	}
+	return false
 }

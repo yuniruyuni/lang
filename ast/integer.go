@@ -6,6 +6,7 @@ import (
 
 type Integer struct {
 	Result Reg
+	Label  Label
 	Alloc  Reg
 	Value  int
 }
@@ -14,9 +15,14 @@ func (nd *Integer) ResultReg() Reg {
 	return nd.Result
 }
 
+func (s *Integer) ResultLabel() Label {
+	return s.Label
+}
+
 func (nd *Integer) AcquireReg(g *Gen) {
 	nd.Alloc = g.NextReg()
 	nd.Result = g.NextReg()
+	nd.Label = g.CurLabel()
 }
 
 func (nd *Integer) GenHeader() IR {

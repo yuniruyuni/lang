@@ -18,15 +18,19 @@ type NonTerminal func(Pos) (Pos, ast.AST, error)
 // Parser transforms this language into AST.
 // --- PEG ---
 // AST Emit will happen for x in [x].
-// Root := Expr | Res | String
+// Root := Cond | Res | String
+// Cond := Less | Equal | Expr
+// [Less] := Expr < Cond
+// [Equal] := Expr == Cond
 // Expr := Add | Sub | Term
 // [Add] := Term + Expr
 // [Sub] := Term - Expr
 // Term := Mul | Div | Res
 // [Mul] := Res * Term
 // [Div] := Res / Term
-// Res := Clause | Integer
-// Clause := ( Expr )
+// Res := If | Clause | Integer
+// Clause := ( Cond )
+// If := if Cond { Cond } else { Cond }
 type Parser struct {
 	tokens []*token.Token
 }
@@ -65,7 +69,7 @@ func (p *Parser) End(at Pos) bool {
 }
 
 func (p *Parser) Root(at Pos) (Pos, ast.AST, error) {
-	nx, parsed, err := Select(p.Expr, p.Res, p.String)(at)
+	nx, parsed, err := Select(p.Cond, p.Res, p.String)(at)
 	if err != nil {
 		return at, nil, err
 	}
@@ -75,6 +79,33 @@ func (p *Parser) Root(at Pos) (Pos, ast.AST, error) {
 	}
 
 	return nx, parsed, nil
+}
+
+func (p *Parser) Cond(at Pos) (Pos, ast.AST, error) {
+	return Select(p.Less, p.Equal, p.Expr)(at)
+}
+
+func (p *Parser) Less(at Pos) (Pos, ast.AST, error) {
+	return Concat(
+		func(asts []ast.AST) ast.AST {
+			return &ast.Less{LHS: asts[0], RHS: asts[2]}
+		},
+		p.Expr,
+		p.Skip(kind.Less),
+		p.Cond,
+	)(at)
+}
+
+func (p *Parser) Equal(at Pos) (Pos, ast.AST, error) {
+	return Concat(
+		func(asts []ast.AST) ast.AST {
+			return &ast.Equal{LHS: asts[0], RHS: asts[3]}
+		},
+		p.Expr,
+		p.Skip(kind.Equal),
+		p.Skip(kind.Equal),
+		p.Cond,
+	)(at)
 }
 
 func (p *Parser) Expr(at Pos) (Pos, ast.AST, error) {
@@ -126,15 +157,36 @@ func (p *Parser) Div(at Pos) (Pos, ast.AST, error) {
 }
 
 func (p *Parser) Res(at Pos) (Pos, ast.AST, error) {
-	return Select(p.Clause, p.Integer)(at)
+	return Select(p.If, p.Clause, p.Integer)(at)
 }
 
 func (p *Parser) Clause(at Pos) (Pos, ast.AST, error) {
 	return Concat(
 		func(asts []ast.AST) ast.AST { return asts[1] },
 		p.Skip(kind.LeftParen),
-		p.Expr,
+		p.Cond,
 		p.Skip(kind.RightParen),
+	)(at)
+}
+
+func (p *Parser) If(at Pos) (Pos, ast.AST, error) {
+	return Concat(
+		func(asts []ast.AST) ast.AST {
+			return &ast.If{
+				Cond: asts[1],
+				Then: asts[3],
+				Else: asts[7],
+			}
+		},
+		p.Skip(kind.If),
+		p.Cond,
+		p.Skip(kind.LeftCurly),
+		p.Cond,
+		p.Skip(kind.RightCurly),
+		p.Skip(kind.Else),
+		p.Skip(kind.LeftCurly),
+		p.Cond,
+		p.Skip(kind.RightCurly),
 	)(at)
 }
 
@@ -157,7 +209,8 @@ func (p *Parser) String(at Pos) (Pos, ast.AST, error) {
 	if t == nil {
 		return at, nil, errors.New("invalid token")
 	}
-	return nx, &ast.String{Word: t.Str}, nil
+	word := t.Str[1 : len(t.Str)-1]
+	return nx, &ast.String{Word: word}, nil
 }
 
 func Parse(tks []*token.Token) (ast.AST, error) {
