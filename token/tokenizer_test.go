@@ -227,6 +227,42 @@ func TestTokenizer_Tokenize(t *testing.T) {
 				{Kind: kind.String, Str: `"def"`, Beg: 3, End: 8},
 			},
 		},
+		{
+			name: "variable",
+			code: `var`,
+			want: []*token.Token{
+				{Kind: kind.Identifier, Str: "var", Beg: 0, End: 3},
+			},
+		},
+		{
+			name: "if",
+			code: `if`,
+			want: []*token.Token{
+				{Kind: kind.If, Str: "if", Beg: 0, End: 2},
+			},
+		},
+		{
+			name: "else",
+			code: `else`,
+			want: []*token.Token{
+				{Kind: kind.Else, Str: "else", Beg: 0, End: 4},
+			},
+		},
+		{
+			name: "condition",
+			code: `if 1 { 10 } else { 20 }`,
+			want: []*token.Token{
+				{Kind: kind.If, Str: "if", Beg: 0, End: 2},
+				{Kind: kind.Integer, Str: "1", Beg: 3, End: 4},
+				{Kind: kind.LeftCurly, Str: "{", Beg: 5, End: 6},
+				{Kind: kind.Integer, Str: "10", Beg: 7, End: 9},
+				{Kind: kind.RightCurly, Str: "}", Beg: 10, End: 11},
+				{Kind: kind.Else, Str: "else", Beg: 12, End: 16},
+				{Kind: kind.LeftCurly, Str: "{", Beg: 17, End: 18},
+				{Kind: kind.Integer, Str: "20", Beg: 19, End: 21},
+				{Kind: kind.RightCurly, Str: "}", Beg: 22, End: 23},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

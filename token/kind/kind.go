@@ -18,4 +18,8 @@ const (
 	Divide
 	LeftParen
 	RightParen
+	LeftCurly
+	RightCurly
+	If
+	Else
 )

@@ -27,9 +27,12 @@ var table = Transition{
 		{check: Ch('/'), emit: Emit(kind.Divide), next: state.Init, retry: false},
 		{check: Ch('('), emit: Emit(kind.LeftParen), next: state.Init, retry: false},
 		{check: Ch(')'), emit: Emit(kind.RightParen), next: state.Init, retry: false},
+		{check: Ch('{'), emit: Emit(kind.LeftCurly), next: state.Init, retry: false},
+		{check: Ch('}'), emit: Emit(kind.RightCurly), next: state.Init, retry: false},
 		{check: Ch('<'), emit: Emit(kind.Less), next: state.Init, retry: false},
 		{check: Ch('='), emit: Emit(kind.Equal), next: state.Init, retry: false},
-		{check: IsDigit, emit: Emit(kind.Skip), next: state.Integer, retry: true},
+		{check: IsDigit, emit: Save, next: state.Integer, retry: true},
+		{check: IsLetter, emit: Save, next: state.Identifier, retry: true},
 	},
 	state.String: Edges{
 		{check: Ch('"'), emit: Emit(kind.String), next: state.Init, retry: false},
@@ -41,6 +44,10 @@ var table = Transition{
 	state.Integer: Edges{
 		{check: IsDigit, emit: Save, next: state.Integer, retry: false},
 		{check: Any, emit: Emit(kind.Integer), next: state.Init, retry: true},
+	},
+	state.Identifier: Edges{
+		{check: IsLetter, emit: Save, next: state.Identifier, retry: false},
+		{check: Any, emit: Emit(kind.Identifier), next: state.Init, retry: true},
 	},
 }
 

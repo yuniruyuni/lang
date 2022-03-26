@@ -7,4 +7,5 @@ const (
 	String
 	Escape
 	Integer
+	Identifier
 )
