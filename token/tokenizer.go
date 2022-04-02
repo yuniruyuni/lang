@@ -25,6 +25,7 @@ type Tokenizer struct {
 
 func (t *Tokenizer) emit(tk *Token) {
 	t.tokens = append(t.tokens, tk)
+	t.beg = t.cur
 }
 
 func (t *Tokenizer) next(pos int, ch rune) {

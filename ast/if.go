@@ -1,9 +1,6 @@
 package ast
 
-import (
-	"fmt"
-	"strings"
-)
+import "github.com/yuniruyuni/lang/ir"
 
 type If struct {
 	Result  Reg
@@ -26,75 +23,63 @@ func (s *If) ResultLabel() Label {
 	return s.PhiLabel
 }
 
-func (s *If) AcquireReg(g *Gen) {
-	s.Cond.AcquireReg(g)
-	s.CondReg = g.NextReg()
-	s.ThenLabel = g.NextLabel()
-	s.Then.AcquireReg(g)
-	s.ElseLabel = g.NextLabel()
-	s.Else.AcquireReg(g)
-	s.PhiLabel = g.NextLabel()
-	s.Result = g.NextReg()
-}
-
-func (s *If) GenHeader() IR {
+func (s *If) GenHeader() ir.IR {
 	return s.Cond.GenHeader() + s.Then.GenHeader() + s.Else.GenHeader()
 }
 
-func (s *If) GenBody() IR {
-	condBody := s.Cond.GenBody()
-	thenBody := s.Then.GenBody()
-	elseBody := s.Else.GenBody()
+func (s *If) GenBody(g *Gen) ir.IR {
+	condBody := s.Cond.GenBody(g)
+	s.CondReg = g.NextReg()
+	s.ThenLabel = g.NextLabel()
+	thenBody := s.Then.GenBody(g)
+	s.ElseLabel = g.NextLabel()
+	elseBody := s.Else.GenBody(g)
+	s.PhiLabel = g.NextLabel()
+	s.Result = g.NextReg()
 
-	jumpTmpl := `
+	return ir.IR(`
+		; ------- start if condition
+		%s
+
+		; ------- check the condition meets or not
 		%%%d = icmp ne i32 %%%d, 0
 		br i1 %%%d, label %%label.%d, label %%label.%d
-	`
-	jumpBody := fmt.Sprintf(
-		jumpTmpl,
-		s.CondReg,
-		s.Cond.ResultReg(),
-		s.CondReg,
-		s.ThenLabel,
-		s.ElseLabel,
-	)
 
-	phiTmpl := `
+		; ------- then clause
+		label.%d:
+		%s
+		br label %%label.%d
+
+		; ------- else clause
+		label.%d:
+		%s
+		br label %%label.%d
+
+		; ------- phi label for an if expression
+		label.%d:
 		%%%d = phi i32 [ %%%d, %%label.%d ], [ %%%d, %%label.%d ]
-	`
-	phiBody := fmt.Sprintf(
-		phiTmpl,
+	`).Expand(
+		condBody,
+		s.CondReg, s.Cond.ResultReg(),
+		s.CondReg, s.ThenLabel, s.ElseLabel,
+		s.ThenLabel,
+		thenBody,
+		s.PhiLabel, s.ElseLabel,
+		elseBody,
+		s.PhiLabel, s.PhiLabel,
 		s.ResultReg(),
 		s.Then.ResultReg(),
 		s.Then.ResultLabel(),
 		s.Else.ResultReg(),
 		s.Else.ResultLabel(),
 	)
-
-	bodies := []string{
-		string(condBody),
-		string(jumpBody),
-		fmt.Sprintf("label.%d:\n", s.ThenLabel),
-		string(thenBody),
-		fmt.Sprintf("\t\tbr label %%label.%d\n", s.PhiLabel),
-		fmt.Sprintf("label.%d:\n", s.ElseLabel),
-		string(elseBody),
-		fmt.Sprintf("\t\tbr label %%label.%d\n", s.PhiLabel),
-		fmt.Sprintf("label.%d:\n", s.PhiLabel),
-		string(phiBody),
-	}
-
-	return IR(strings.Join(bodies, "\n"))
 }
 
-func (s *If) GenPrinter() IR {
-	tmpl := `
-		call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([%d x i8], [%d x i8]* @.%s, i64 0, i64 0), i32 %%%d)
-	`
-
+func (s *If) GenPrinter() ir.IR {
 	n := "intfmt"
 	l := 4
 	v := s.Result
 
-	return IR(fmt.Sprintf(tmpl, l, l, n, v))
+	return ir.IR(`call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([%d x i8], [%d x i8]* @.%s, i64 0, i64 0), i32 %%%d)`).
+		Expand(l, l, n, v)
 }

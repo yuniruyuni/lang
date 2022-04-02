@@ -2,6 +2,7 @@ package gen
 
 import (
 	"github.com/yuniruyuni/lang/ast"
+	"github.com/yuniruyuni/lang/ir"
 )
 
 const bodyOpen = `
@@ -23,14 +24,12 @@ type LLFile struct {
 	AST ast.AST
 }
 
-func (ll *LLFile) Generate() ast.IR {
+func (ll *LLFile) Generate() ir.IR {
 	gen := ast.Gen{}
 	_ = gen.NextReg()
 
-	ll.AST.AcquireReg(&gen)
-
 	header := ll.AST.GenHeader()
-	body := bodyOpen + ll.AST.GenBody() + ll.AST.GenPrinter() + bodyClose
+	body := bodyOpen + ll.AST.GenBody(&gen) + ll.AST.GenPrinter() + bodyClose
 
-	return ast.IR(header + body)
+	return ir.IR(header + body)
 }

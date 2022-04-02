@@ -1,5 +1,9 @@
 package ast
 
+import (
+	"github.com/yuniruyuni/lang/ir"
+)
+
 type Reg int
 type Label int
 
@@ -26,14 +30,11 @@ func (g *Gen) NextLabel() Label {
 	return g.label
 }
 
-type IR string
-
 type AST interface {
 	ResultReg() Reg
 	ResultLabel() Label
-	AcquireReg(g *Gen)
 
-	GenHeader() IR
-	GenBody() IR
-	GenPrinter() IR
+	GenHeader() ir.IR
+	GenBody(g *Gen) ir.IR
+	GenPrinter() ir.IR
 }

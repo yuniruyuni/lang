@@ -395,6 +395,18 @@ func TestParse(t *testing.T) {
 			want:    nil,
 			wantErr: true,
 		},
+		{
+			name: "error when just if",
+			tokens: []*token.Token{
+				{
+					Kind: kind.If,
+					Str:  "if",
+					Beg:  0, End: 2,
+				},
+			},
+			want:    nil,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

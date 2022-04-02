@@ -1,8 +1,6 @@
 package ast
 
-import (
-	"fmt"
-)
+import "github.com/yuniruyuni/lang/ir"
 
 type Integer struct {
 	Result Reg
@@ -19,34 +17,29 @@ func (s *Integer) ResultLabel() Label {
 	return s.Label
 }
 
-func (nd *Integer) AcquireReg(g *Gen) {
-	nd.Alloc = g.NextReg()
-	nd.Result = g.NextReg()
-	nd.Label = g.CurLabel()
-}
-
-func (nd *Integer) GenHeader() IR {
+func (nd *Integer) GenHeader() ir.IR {
 	return "\n"
 }
 
-func (nd *Integer) GenBody() IR {
-	template := `
+func (nd *Integer) GenBody(g *Gen) ir.IR {
+	nd.Alloc = g.NextReg()
+	nd.Result = g.NextReg()
+	nd.Label = g.CurLabel()
+
+	return ir.IR(`
 		%%%d = alloca i32, align 4
 		store i32 %d, i32* %%%d
 		%%%d = load i32, i32* %%%d, align 4
-	`
-
-	return IR(fmt.Sprintf(template, nd.Alloc, nd.Value, nd.Alloc, nd.Result, nd.Alloc))
+	`).Expand(
+		nd.Alloc, nd.Value, nd.Alloc, nd.Result, nd.Alloc,
+	)
 }
 
-func (nd *Integer) GenPrinter() IR {
-	tmpl := `
-		call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([%d x i8], [%d x i8]* @.%s, i64 0, i64 0), i32 %%%d)
-	`
-
+func (nd *Integer) GenPrinter() ir.IR {
 	n := "intfmt"
 	l := 4
 	v := nd.Result
 
-	return IR(fmt.Sprintf(tmpl, l, l, n, v))
+	return ir.IR(`call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([%d x i8], [%d x i8]* @.%s, i64 0, i64 0), i32 %%%d)`).
+		Expand(l, l, n, v)
 }

@@ -1,9 +1,6 @@
 package ast
 
-import (
-	"fmt"
-	"strings"
-)
+import "github.com/yuniruyuni/lang/ir"
 
 type Less struct {
 	TmpReg Reg
@@ -21,27 +18,20 @@ func (s *Less) ResultLabel() Label {
 	return s.RHS.ResultLabel()
 }
 
-func (s *Less) AcquireReg(g *Gen) {
-	s.LHS.AcquireReg(g)
-	s.RHS.AcquireReg(g)
-	s.TmpReg = g.NextReg()
-	s.Result = g.NextReg()
-}
-
-func (s *Less) GenHeader() IR {
+func (s *Less) GenHeader() ir.IR {
 	return s.LHS.GenHeader() + s.RHS.GenHeader()
 }
 
-func (s *Less) GenBody() IR {
-	lhsBody := s.LHS.GenBody()
-	rhsBody := s.RHS.GenBody()
+func (s *Less) GenBody(g *Gen) ir.IR {
+	lhsBody := s.LHS.GenBody(g)
+	rhsBody := s.RHS.GenBody(g)
+	s.TmpReg = g.NextReg()
+	s.Result = g.NextReg()
 
-	tmpl := `
+	body := ir.IR(`
 		%%%d = icmp slt i32 %%%d, %%%d
 		%%%d = zext i1 %%%d to i32
-	`
-	body := fmt.Sprintf(
-		tmpl,
+	`).Expand(
 		s.TmpReg,
 		s.LHS.ResultReg(),
 		s.RHS.ResultReg(),
@@ -49,23 +39,14 @@ func (s *Less) GenBody() IR {
 		s.TmpReg,
 	)
 
-	bodies := []string{
-		string(lhsBody),
-		string(rhsBody),
-		string(body),
-	}
-
-	return IR(strings.Join(bodies, "\n"))
+	return ir.Concat(lhsBody, rhsBody, body)
 }
 
-func (s *Less) GenPrinter() IR {
-	tmpl := `
-		call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([%d x i8], [%d x i8]* @.%s, i64 0, i64 0), i32 %%%d)
-	`
-
+func (s *Less) GenPrinter() ir.IR {
 	n := "intfmt"
 	l := 4
 	v := s.Result
 
-	return IR(fmt.Sprintf(tmpl, l, l, n, v))
+	return ir.IR(`call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([%d x i8], [%d x i8]* @.%s, i64 0, i64 0), i32 %%%d)`).
+		Expand(l, l, n, v)
 }

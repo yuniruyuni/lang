@@ -1,9 +1,9 @@
 package main
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 
 	"github.com/yuniruyuni/lang/ast"
@@ -17,8 +17,6 @@ func outputLL(root ast.AST) {
 	fmt.Print(ll.Generate())
 }
 
-var sc = bufio.NewScanner(os.Stdin)
-
 func tokenize(code string) ([]*token.Token, error) {
 	t := token.Tokenizer{}
 	tks := t.Tokenize(code)
@@ -29,18 +27,21 @@ func tokenize(code string) ([]*token.Token, error) {
 }
 
 func main() {
-	sc.Scan()
-	code := sc.Text()
+	bytes, err := ioutil.ReadAll(os.Stdin)
+	if err != nil {
+		panic("cannot read stdin")
+	}
+	code := string(bytes)
 
 	tks, err := tokenize(code)
 	if err != nil {
-		_ = fmt.Errorf("failed to tokenize code: %s", err.Error())
+		fmt.Fprintf(os.Stderr, "failed to tokenize code: %s", err.Error())
 		os.Exit(-1)
 	}
 
 	root, err := parse.Parse(tks)
 	if err != nil {
-		_ = fmt.Errorf("failed to parse code: %s", err.Error())
+		fmt.Fprintf(os.Stderr, "failed to parse code: %s", err.Error())
 		os.Exit(-1)
 	}
 

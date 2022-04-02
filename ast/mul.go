@@ -1,9 +1,6 @@
 package ast
 
-import (
-	"fmt"
-	"strings"
-)
+import "github.com/yuniruyuni/lang/ir"
 
 type Mul struct {
 	Result Reg
@@ -20,47 +17,26 @@ func (s *Mul) ResultLabel() Label {
 	return s.RHS.ResultLabel()
 }
 
-func (s *Mul) AcquireReg(g *Gen) {
-	s.LHS.AcquireReg(g)
-	s.RHS.AcquireReg(g)
-	s.Result = g.NextReg()
-}
-
-func (s *Mul) GenHeader() IR {
+func (s *Mul) GenHeader() ir.IR {
 	return s.LHS.GenHeader() + s.RHS.GenHeader()
 }
 
-func (s *Mul) GenBody() IR {
-	lhsBody := s.LHS.GenBody()
-	rhsBody := s.RHS.GenBody()
+func (s *Mul) GenBody(g *Gen) ir.IR {
+	lhsBody := s.LHS.GenBody(g)
+	rhsBody := s.RHS.GenBody(g)
+	s.Result = g.NextReg()
 
-	tmpl := `
-		%%%d = mul i32 %%%d, %%%d
-	`
-	body := fmt.Sprintf(
-		tmpl,
-		s.Result,
-		s.LHS.ResultReg(),
-		s.RHS.ResultReg(),
-	)
+	body := ir.IR(`%%%d = mul i32 %%%d, %%%d`).
+		Expand(s.Result, s.LHS.ResultReg(), s.RHS.ResultReg())
 
-	bodies := []string{
-		string(lhsBody),
-		string(rhsBody),
-		string(body),
-	}
-
-	return IR(strings.Join(bodies, "\n"))
+	return ir.Concat(lhsBody, rhsBody, body)
 }
 
-func (s *Mul) GenPrinter() IR {
-	tmpl := `
-		call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([%d x i8], [%d x i8]* @.%s, i64 0, i64 0), i32 %%%d)
-	`
-
+func (s *Mul) GenPrinter() ir.IR {
 	n := "intfmt"
 	l := 4
 	v := s.Result
 
-	return IR(fmt.Sprintf(tmpl, l, l, n, v))
+	return ir.IR(`call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([%d x i8], [%d x i8]* @.%s, i64 0, i64 0), i32 %%%d)`).
+		Expand(l, l, n, v)
 }
