@@ -38,15 +38,24 @@ func (s *If) GenBody(g *Gen) ir.IR {
 	s.Result = g.NextReg()
 
 	return ir.IR(`
+		; ------- start if condition
 		%s
+
+		; ------- check the condition meets or not
 		%%%d = icmp ne i32 %%%d, 0
 		br i1 %%%d, label %%label.%d, label %%label.%d
+
+		; ------- then clause
 		label.%d:
 		%s
 		br label %%label.%d
+
+		; ------- else clause
 		label.%d:
 		%s
 		br label %%label.%d
+
+		; ------- phi label for an if expression
 		label.%d:
 		%%%d = phi i32 [ %%%d, %%label.%d ], [ %%%d, %%label.%d ]
 	`).Expand(
