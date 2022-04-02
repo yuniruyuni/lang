@@ -35,38 +35,32 @@ func (s *If) GenBody(g *Gen) IR {
 	s.PhiLabel = g.NextLabel()
 	s.Result = g.NextReg()
 
-	jumpBody := IR(`
+	return IR(`
+		%s
 		%%%d = icmp ne i32 %%%d, 0
 		br i1 %%%d, label %%label.%d, label %%label.%d
-	`).Expand(
-		s.CondReg,
-		s.Cond.ResultReg(),
-		s.CondReg,
-		s.ThenLabel,
-		s.ElseLabel,
-	)
-
-	phiBody := IR(`
+		label.%d:
+		%s
+		br label %%label.%d
+		label.%d:
+		%s
+		br label %%label.%d
+		label.%d:
 		%%%d = phi i32 [ %%%d, %%label.%d ], [ %%%d, %%label.%d ]
 	`).Expand(
+		condBody,
+		s.CondReg, s.Cond.ResultReg(),
+		s.CondReg, s.ThenLabel, s.ElseLabel,
+		s.ThenLabel,
+		thenBody,
+		s.PhiLabel, s.ElseLabel,
+		elseBody,
+		s.PhiLabel, s.PhiLabel,
 		s.ResultReg(),
 		s.Then.ResultReg(),
 		s.Then.ResultLabel(),
 		s.Else.ResultReg(),
 		s.Else.ResultLabel(),
-	)
-
-	return Concat(
-		condBody,
-		jumpBody,
-		IR("label.%d:").Expand(s.ThenLabel),
-		thenBody,
-		IR("\t\tbr label %%label.%d").Expand(s.PhiLabel),
-		IR("label.%d:").Expand(s.ElseLabel),
-		elseBody,
-		IR("\t\tbr label %%label.%d\n").Expand(s.PhiLabel),
-		IR("label.%d:\n").Expand(s.PhiLabel),
-		phiBody,
 	)
 }
 
