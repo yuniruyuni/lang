@@ -8,16 +8,14 @@ test_with() {
     file="$1"
     want="$2"
 
-    cat "$file"
-
     mkdir -p "${TMPDIR}"
     cat "$file" | $TARGET > "${OUTPUT}"
     got=`lli ${OUTPUT}`
 
     if [ "$got" == "$want" ]; then
-        echo "[SUCCEED] $args => $got"
+        echo "[SUCCEED] $file => $got"
     else
-        echo "[FAILED] $args => want: $want, got: $got"
+        echo "[FAILED] $file => want: $want, got: $got"
     fi
 }
 
