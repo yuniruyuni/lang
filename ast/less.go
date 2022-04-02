@@ -21,20 +21,15 @@ func (s *Less) ResultLabel() Label {
 	return s.RHS.ResultLabel()
 }
 
-func (s *Less) AcquireReg(g *Gen) {
-	s.LHS.AcquireReg(g)
-	s.RHS.AcquireReg(g)
-	s.TmpReg = g.NextReg()
-	s.Result = g.NextReg()
-}
-
 func (s *Less) GenHeader() IR {
 	return s.LHS.GenHeader() + s.RHS.GenHeader()
 }
 
-func (s *Less) GenBody() IR {
-	lhsBody := s.LHS.GenBody()
-	rhsBody := s.RHS.GenBody()
+func (s *Less) GenBody(g *Gen) IR {
+	lhsBody := s.LHS.GenBody(g)
+	rhsBody := s.RHS.GenBody(g)
+	s.TmpReg = g.NextReg()
+	s.Result = g.NextReg()
 
 	tmpl := `
 		%%%d = icmp slt i32 %%%d, %%%d

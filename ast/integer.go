@@ -19,17 +19,15 @@ func (s *Integer) ResultLabel() Label {
 	return s.Label
 }
 
-func (nd *Integer) AcquireReg(g *Gen) {
-	nd.Alloc = g.NextReg()
-	nd.Result = g.NextReg()
-	nd.Label = g.CurLabel()
-}
-
 func (nd *Integer) GenHeader() IR {
 	return "\n"
 }
 
-func (nd *Integer) GenBody() IR {
+func (nd *Integer) GenBody(g *Gen) IR {
+	nd.Alloc = g.NextReg()
+	nd.Result = g.NextReg()
+	nd.Label = g.CurLabel()
+
 	template := `
 		%%%d = alloca i32, align 4
 		store i32 %d, i32* %%%d

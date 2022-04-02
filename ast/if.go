@@ -26,25 +26,19 @@ func (s *If) ResultLabel() Label {
 	return s.PhiLabel
 }
 
-func (s *If) AcquireReg(g *Gen) {
-	s.Cond.AcquireReg(g)
-	s.CondReg = g.NextReg()
-	s.ThenLabel = g.NextLabel()
-	s.Then.AcquireReg(g)
-	s.ElseLabel = g.NextLabel()
-	s.Else.AcquireReg(g)
-	s.PhiLabel = g.NextLabel()
-	s.Result = g.NextReg()
-}
-
 func (s *If) GenHeader() IR {
 	return s.Cond.GenHeader() + s.Then.GenHeader() + s.Else.GenHeader()
 }
 
-func (s *If) GenBody() IR {
-	condBody := s.Cond.GenBody()
-	thenBody := s.Then.GenBody()
-	elseBody := s.Else.GenBody()
+func (s *If) GenBody(g *Gen) IR {
+	condBody := s.Cond.GenBody(g)
+	s.CondReg = g.NextReg()
+	s.ThenLabel = g.NextLabel()
+	thenBody := s.Then.GenBody(g)
+	s.ElseLabel = g.NextLabel()
+	elseBody := s.Else.GenBody(g)
+	s.PhiLabel = g.NextLabel()
+	s.Result = g.NextReg()
 
 	jumpTmpl := `
 		%%%d = icmp ne i32 %%%d, 0

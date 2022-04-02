@@ -12,9 +12,6 @@ func (s *String) ResultReg() Reg {
 	return 0
 }
 
-func (s *String) AcquireReg(g *Gen) {
-}
-
 func (s *String) ResultLabel() Label {
 	return 0
 }
@@ -41,7 +38,7 @@ func (nd *String) GenHeader() IR {
 	return IR(fmt.Sprintf(template, n, l, w))
 }
 
-func (nd *String) GenBody() IR {
+func (nd *String) GenBody(g *Gen) IR {
 	template := `call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([%d x i8], [%d x i8]* @.%s, i64 0, i64 0))`
 
 	n := nd.Name()

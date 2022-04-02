@@ -21,20 +21,15 @@ func (s *Equal) ResultLabel() Label {
 	return s.RHS.ResultLabel()
 }
 
-func (s *Equal) AcquireReg(g *Gen) {
-	s.LHS.AcquireReg(g)
-	s.RHS.AcquireReg(g)
-	s.TmpReg = g.NextReg()
-	s.Result = g.NextReg()
-}
-
 func (s *Equal) GenHeader() IR {
 	return s.LHS.GenHeader() + s.RHS.GenHeader()
 }
 
-func (s *Equal) GenBody() IR {
-	lhsBody := s.LHS.GenBody()
-	rhsBody := s.RHS.GenBody()
+func (s *Equal) GenBody(g *Gen) IR {
+	lhsBody := s.LHS.GenBody(g)
+	rhsBody := s.RHS.GenBody(g)
+	s.TmpReg = g.NextReg()
+	s.Result = g.NextReg()
 
 	tmpl := `
 		%%%d = icmp eq i32 %%%d, %%%d

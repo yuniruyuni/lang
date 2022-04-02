@@ -16,12 +16,6 @@ func (s *Div) ResultReg() Reg {
 	return s.Result
 }
 
-func (s *Div) AcquireReg(g *Gen) {
-	s.LHS.AcquireReg(g)
-	s.RHS.AcquireReg(g)
-	s.Result = g.NextReg()
-}
-
 func (s *Div) ResultLabel() Label {
 	return s.RHS.ResultLabel()
 }
@@ -30,9 +24,10 @@ func (s *Div) GenHeader() IR {
 	return s.LHS.GenHeader() + s.RHS.GenHeader()
 }
 
-func (s *Div) GenBody() IR {
-	lhsBody := s.LHS.GenBody()
-	rhsBody := s.RHS.GenBody()
+func (s *Div) GenBody(g *Gen) IR {
+	lhsBody := s.LHS.GenBody(g)
+	rhsBody := s.RHS.GenBody(g)
+	s.Result = g.NextReg()
 
 	tmpl := `
 		%%%d = sdiv i32 %%%d, %%%d

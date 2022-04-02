@@ -20,19 +20,14 @@ func (s *Sub) ResultLabel() Label {
 	return s.RHS.ResultLabel()
 }
 
-func (s *Sub) AcquireReg(g *Gen) {
-	s.LHS.AcquireReg(g)
-	s.RHS.AcquireReg(g)
-	s.Result = g.NextReg()
-}
-
 func (s *Sub) GenHeader() IR {
 	return s.LHS.GenHeader() + s.RHS.GenHeader()
 }
 
-func (s *Sub) GenBody() IR {
-	lhsBody := s.LHS.GenBody()
-	rhsBody := s.RHS.GenBody()
+func (s *Sub) GenBody(g *Gen) IR {
+	lhsBody := s.LHS.GenBody(g)
+	rhsBody := s.RHS.GenBody(g)
+	s.Result = g.NextReg()
 
 	tmpl := `
 		%%%d = sub i32 %%%d, %%%d

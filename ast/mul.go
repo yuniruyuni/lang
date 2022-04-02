@@ -20,19 +20,14 @@ func (s *Mul) ResultLabel() Label {
 	return s.RHS.ResultLabel()
 }
 
-func (s *Mul) AcquireReg(g *Gen) {
-	s.LHS.AcquireReg(g)
-	s.RHS.AcquireReg(g)
-	s.Result = g.NextReg()
-}
-
 func (s *Mul) GenHeader() IR {
 	return s.LHS.GenHeader() + s.RHS.GenHeader()
 }
 
-func (s *Mul) GenBody() IR {
-	lhsBody := s.LHS.GenBody()
-	rhsBody := s.RHS.GenBody()
+func (s *Mul) GenBody(g *Gen) IR {
+	lhsBody := s.LHS.GenBody(g)
+	rhsBody := s.RHS.GenBody(g)
+	s.Result = g.NextReg()
 
 	tmpl := `
 		%%%d = mul i32 %%%d, %%%d
