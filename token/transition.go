@@ -18,8 +18,6 @@ type Edge struct {
 var table = Transition{
 	state.Init: Edges{
 		{check: NilCh, emit: Save, next: state.Init, retry: false},
-		{check: Ch(' '), emit: Emit(kind.Skip), next: state.Init, retry: false},
-		{check: Ch('\t'), emit: Emit(kind.Skip), next: state.Init, retry: false},
 		{check: Ch('"'), emit: Save, next: state.String, retry: false},
 		{check: Ch('+'), emit: Emit(kind.Plus), next: state.Init, retry: false},
 		{check: Ch('-'), emit: Emit(kind.Minus), next: state.Init, retry: false},
