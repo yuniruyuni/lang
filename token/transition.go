@@ -5,7 +5,7 @@ import (
 	"github.com/yuniruyuni/lang/token/state"
 )
 
-type Edges []Edge
+type Edges []*Edge
 type Transition map[state.State]Edges
 
 type Edge struct {
@@ -33,10 +33,12 @@ var table = Transition{
 		{check: Ch('='), emit: Emit(kind.Equal), next: state.Init, retry: false},
 		{check: IsDigit, emit: Save, next: state.Integer, retry: true},
 		{check: IsLetter, emit: Save, next: state.Identifier, retry: true},
+		{check: Any, emit: Emit(kind.Skip), next: state.Init, retry: false},
 	},
 	state.String: Edges{
 		{check: Ch('"'), emit: Emit(kind.String), next: state.Init, retry: false},
 		{check: Ch('\\'), emit: Save, next: state.Escape, retry: false},
+		{check: Any, emit: Save, next: state.String, retry: false},
 	},
 	state.Escape: Edges{
 		{check: Any, emit: Save, next: state.String, retry: false},
@@ -55,25 +57,28 @@ func (tr Transition) Run(tk *Tokenizer, ch rune) bool {
 	return tr[tk.State].Run(tk, ch)
 }
 
-func (es Edges) Run(tk *Tokenizer, ch rune) bool {
+func (es Edges) edgeFor(ch rune) *Edge {
 	for _, e := range es {
-		if !e.check(ch) {
-			continue
+		if e.check(ch) {
+			return e
 		}
-
-		if !e.retry {
-			tk.cur += 1
-		}
-
-		t := e.emit(tk)
-		if t != nil {
-			tk.emit(t)
-			tk.beg = tk.cur
-		}
-
-		tk.State = e.next
-
-		return e.retry
 	}
-	return false
+	return nil
+}
+
+func (es Edges) Run(tk *Tokenizer, ch rune) bool {
+	e := es.edgeFor(ch)
+	if e == nil {
+		panic("There is no edge for next token")
+	}
+
+	if !e.retry {
+		tk.cur += 1
+	}
+
+	e.emit(tk)
+
+	tk.State = e.next
+
+	return e.retry
 }
