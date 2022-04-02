@@ -3,6 +3,7 @@ package ir
 import (
 	"fmt"
 	"strings"
+	"text/template"
 )
 
 type IR string
@@ -21,3 +22,23 @@ func Concat(irs ...IR) IR {
 	}
 	return IR(strings.Join(strs, "\n"))
 }
+
+type Template struct {
+	tmpl *template.Template
+}
+
+func T(tmpl string) *Template {
+	return &Template{
+		tmpl: template.Must(template.New("").Parse(tmpl)),
+	}
+}
+
+func (t *Template) Expand(invs interface{}) IR {
+	b := new(strings.Builder)
+	if err := t.tmpl.Execute(b, invs); err != nil {
+		panic("template expansion doesn't work properly.")
+	}
+	return IR(b.String())
+}
+
+type Vars map[string]interface{}
