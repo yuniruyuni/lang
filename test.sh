@@ -36,6 +36,21 @@ test() {
     fi
 }
 
+fail() {
+    args="$1"
+    want="$2"
+
+    mkdir -p "${TMPDIR}"
+    echo "$args" | $TARGET 2> "${OUTPUT}"
+    got=`cat ${OUTPUT}`
+
+    if [ "$got" == "$want" ]; then
+        echo "[SUCCEED] $args => $got"
+    else
+        echo "[FAILED] $args => want: $want, got: $got"
+    fi
+}
+
 test '"test"' 'test'
 test '"日本語"' '日本語'
 test ' "日本語" ' '日本語'
@@ -73,3 +88,5 @@ test 'if 0 { 10 } else { if 1 { 20 } else { 30 } }' '20'
 test 'if 0 { 10 } else { if 0 { 20 } else { 30 } }' '30'
 
 test_with 'test/if.yuni' '10'
+
+fail 'if' 'failed to parse code: invalid tokens'

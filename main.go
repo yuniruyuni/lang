@@ -35,13 +35,13 @@ func main() {
 
 	tks, err := tokenize(code)
 	if err != nil {
-		_ = fmt.Errorf("failed to tokenize code: %s", err.Error())
+		fmt.Fprintf(os.Stderr, "failed to tokenize code: %s", err.Error())
 		os.Exit(-1)
 	}
 
 	root, err := parse.Parse(tks)
 	if err != nil {
-		_ = fmt.Errorf("failed to parse code: %s", err.Error())
+		fmt.Fprintf(os.Stderr, "failed to parse code: %s", err.Error())
 		os.Exit(-1)
 	}
 
