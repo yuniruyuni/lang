@@ -1,9 +1,5 @@
 package ast
 
-import (
-	"fmt"
-)
-
 type Integer struct {
 	Result Reg
 	Label  Label
@@ -28,23 +24,20 @@ func (nd *Integer) GenBody(g *Gen) IR {
 	nd.Result = g.NextReg()
 	nd.Label = g.CurLabel()
 
-	template := `
+	return IR(`
 		%%%d = alloca i32, align 4
 		store i32 %d, i32* %%%d
 		%%%d = load i32, i32* %%%d, align 4
-	`
-
-	return IR(fmt.Sprintf(template, nd.Alloc, nd.Value, nd.Alloc, nd.Result, nd.Alloc))
+	`).Expand(
+		nd.Alloc, nd.Value, nd.Alloc, nd.Result, nd.Alloc,
+	)
 }
 
 func (nd *Integer) GenPrinter() IR {
-	tmpl := `
-		call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([%d x i8], [%d x i8]* @.%s, i64 0, i64 0), i32 %%%d)
-	`
-
 	n := "intfmt"
 	l := 4
 	v := nd.Result
 
-	return IR(fmt.Sprintf(tmpl, l, l, n, v))
+	return IR(`call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([%d x i8], [%d x i8]* @.%s, i64 0, i64 0), i32 %%%d)`).
+		Expand(l, l, n, v)
 }

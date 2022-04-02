@@ -1,9 +1,5 @@
 package ast
 
-import (
-	"fmt"
-)
-
 type If struct {
 	Result  Reg
 	CondReg Reg
@@ -39,12 +35,10 @@ func (s *If) GenBody(g *Gen) IR {
 	s.PhiLabel = g.NextLabel()
 	s.Result = g.NextReg()
 
-	jumpTmpl := `
+	jumpBody := IR(`
 		%%%d = icmp ne i32 %%%d, 0
 		br i1 %%%d, label %%label.%d, label %%label.%d
-	`
-	jumpBody := fmt.Sprintf(
-		jumpTmpl,
+	`).Expand(
 		s.CondReg,
 		s.Cond.ResultReg(),
 		s.CondReg,
@@ -52,11 +46,9 @@ func (s *If) GenBody(g *Gen) IR {
 		s.ElseLabel,
 	)
 
-	phiTmpl := `
+	phiBody := IR(`
 		%%%d = phi i32 [ %%%d, %%label.%d ], [ %%%d, %%label.%d ]
-	`
-	phiBody := fmt.Sprintf(
-		phiTmpl,
+	`).Expand(
 		s.ResultReg(),
 		s.Then.ResultReg(),
 		s.Then.ResultLabel(),
@@ -66,26 +58,23 @@ func (s *If) GenBody(g *Gen) IR {
 
 	return Concat(
 		condBody,
-		IR(jumpBody),
-		IR(fmt.Sprintf("label.%d:\n", s.ThenLabel)),
+		jumpBody,
+		IR("label.%d:").Expand(s.ThenLabel),
 		thenBody,
-		IR(fmt.Sprintf("\t\tbr label %%label.%d\n", s.PhiLabel)),
-		IR(fmt.Sprintf("label.%d:\n", s.ElseLabel)),
+		IR("\t\tbr label %%label.%d").Expand(s.PhiLabel),
+		IR("label.%d:").Expand(s.ElseLabel),
 		elseBody,
-		IR(fmt.Sprintf("\t\tbr label %%label.%d\n", s.PhiLabel)),
-		IR(fmt.Sprintf("label.%d:\n", s.PhiLabel)),
-		IR(phiBody),
+		IR("\t\tbr label %%label.%d\n").Expand(s.PhiLabel),
+		IR("label.%d:\n").Expand(s.PhiLabel),
+		phiBody,
 	)
 }
 
 func (s *If) GenPrinter() IR {
-	tmpl := `
-		call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([%d x i8], [%d x i8]* @.%s, i64 0, i64 0), i32 %%%d)
-	`
-
 	n := "intfmt"
 	l := 4
 	v := s.Result
 
-	return IR(fmt.Sprintf(tmpl, l, l, n, v))
+	return IR(`call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([%d x i8], [%d x i8]* @.%s, i64 0, i64 0), i32 %%%d)`).
+		Expand(l, l, n, v)
 }

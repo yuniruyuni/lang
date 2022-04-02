@@ -1,6 +1,9 @@
 package ast
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 type Reg int
 type Label int
@@ -29,6 +32,10 @@ func (g *Gen) NextLabel() Label {
 }
 
 type IR string
+
+func (ir IR) Expand(vals ...interface{}) IR {
+	return IR(fmt.Sprintf(string(ir), vals...))
+}
 
 type IRs []IR
 

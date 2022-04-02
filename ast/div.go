@@ -1,9 +1,5 @@
 package ast
 
-import (
-	"fmt"
-)
-
 type Div struct {
 	Result Reg
 	// for `x / y`,
@@ -28,27 +24,17 @@ func (s *Div) GenBody(g *Gen) IR {
 	rhsBody := s.RHS.GenBody(g)
 	s.Result = g.NextReg()
 
-	tmpl := `
-		%%%d = sdiv i32 %%%d, %%%d
-	`
-	body := fmt.Sprintf(
-		tmpl,
-		s.Result,
-		s.LHS.ResultReg(),
-		s.RHS.ResultReg(),
-	)
+	body := IR(`%%%d = sdiv i32 %%%d, %%%d`).
+		Expand(s.Result, s.LHS.ResultReg(), s.RHS.ResultReg())
 
-	return Concat(lhsBody, rhsBody, IR(body))
+	return Concat(lhsBody, rhsBody, body)
 }
 
 func (s *Div) GenPrinter() IR {
-	tmpl := `
-		call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([%d x i8], [%d x i8]* @.%s, i64 0, i64 0), i32 %%%d)
-	`
-
 	n := "intfmt"
 	l := 4
 	v := s.Result
 
-	return IR(fmt.Sprintf(tmpl, l, l, n, v))
+	return IR(`call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([%d x i8], [%d x i8]* @.%s, i64 0, i64 0), i32 %%%d)`).
+		Expand(l, l, n, v)
 }

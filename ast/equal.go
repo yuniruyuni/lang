@@ -1,9 +1,5 @@
 package ast
 
-import (
-	"fmt"
-)
-
 type Equal struct {
 	TmpReg Reg
 	Result Reg
@@ -30,12 +26,10 @@ func (s *Equal) GenBody(g *Gen) IR {
 	s.TmpReg = g.NextReg()
 	s.Result = g.NextReg()
 
-	tmpl := `
+	body := IR(`
 		%%%d = icmp eq i32 %%%d, %%%d
 		%%%d = zext i1 %%%d to i32
-	`
-	body := fmt.Sprintf(
-		tmpl,
+	`).Expand(
 		s.TmpReg,
 		s.LHS.ResultReg(),
 		s.RHS.ResultReg(),
@@ -43,17 +37,14 @@ func (s *Equal) GenBody(g *Gen) IR {
 		s.TmpReg,
 	)
 
-	return Concat(lhsBody, rhsBody, IR(body))
+	return Concat(lhsBody, rhsBody, body)
 }
 
 func (s *Equal) GenPrinter() IR {
-	tmpl := `
-		call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([%d x i8], [%d x i8]* @.%s, i64 0, i64 0), i32 %%%d)
-	`
-
 	n := "intfmt"
 	l := 4
 	v := s.Result
 
-	return IR(fmt.Sprintf(tmpl, l, l, n, v))
+	return IR(`call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([%d x i8], [%d x i8]* @.%s, i64 0, i64 0), i32 %%%d)`).
+		Expand(l, l, n, v)
 }
