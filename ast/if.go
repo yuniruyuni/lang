@@ -1,5 +1,7 @@
 package ast
 
+import "github.com/yuniruyuni/lang/ir"
+
 type If struct {
 	Result  Reg
 	CondReg Reg
@@ -21,11 +23,11 @@ func (s *If) ResultLabel() Label {
 	return s.PhiLabel
 }
 
-func (s *If) GenHeader() IR {
+func (s *If) GenHeader() ir.IR {
 	return s.Cond.GenHeader() + s.Then.GenHeader() + s.Else.GenHeader()
 }
 
-func (s *If) GenBody(g *Gen) IR {
+func (s *If) GenBody(g *Gen) ir.IR {
 	condBody := s.Cond.GenBody(g)
 	s.CondReg = g.NextReg()
 	s.ThenLabel = g.NextLabel()
@@ -35,7 +37,7 @@ func (s *If) GenBody(g *Gen) IR {
 	s.PhiLabel = g.NextLabel()
 	s.Result = g.NextReg()
 
-	return IR(`
+	return ir.IR(`
 		%s
 		%%%d = icmp ne i32 %%%d, 0
 		br i1 %%%d, label %%label.%d, label %%label.%d
@@ -64,11 +66,11 @@ func (s *If) GenBody(g *Gen) IR {
 	)
 }
 
-func (s *If) GenPrinter() IR {
+func (s *If) GenPrinter() ir.IR {
 	n := "intfmt"
 	l := 4
 	v := s.Result
 
-	return IR(`call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([%d x i8], [%d x i8]* @.%s, i64 0, i64 0), i32 %%%d)`).
+	return ir.IR(`call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([%d x i8], [%d x i8]* @.%s, i64 0, i64 0), i32 %%%d)`).
 		Expand(l, l, n, v)
 }

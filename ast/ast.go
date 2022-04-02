@@ -1,8 +1,7 @@
 package ast
 
 import (
-	"fmt"
-	"strings"
+	"github.com/yuniruyuni/lang/ir"
 )
 
 type Reg int
@@ -31,28 +30,11 @@ func (g *Gen) NextLabel() Label {
 	return g.label
 }
 
-type IR string
-
-func (ir IR) Expand(vals ...interface{}) IR {
-	return IR(fmt.Sprintf(string(ir), vals...))
-}
-
-type IRs []IR
-
-// Concat concatinate all given IRs into single IR.
-func Concat(irs ...IR) IR {
-	strs := make([]string, 0, len(irs))
-	for _, ir := range irs {
-		strs = append(strs, string(ir))
-	}
-	return IR(strings.Join(strs, "\n"))
-}
-
 type AST interface {
 	ResultReg() Reg
 	ResultLabel() Label
 
-	GenHeader() IR
-	GenBody(g *Gen) IR
-	GenPrinter() IR
+	GenHeader() ir.IR
+	GenBody(g *Gen) ir.IR
+	GenPrinter() ir.IR
 }
