@@ -2,7 +2,6 @@ package ast
 
 import (
 	"fmt"
-	"strings"
 )
 
 type If struct {
@@ -65,20 +64,18 @@ func (s *If) GenBody(g *Gen) IR {
 		s.Else.ResultLabel(),
 	)
 
-	bodies := []string{
-		string(condBody),
-		string(jumpBody),
-		fmt.Sprintf("label.%d:\n", s.ThenLabel),
-		string(thenBody),
-		fmt.Sprintf("\t\tbr label %%label.%d\n", s.PhiLabel),
-		fmt.Sprintf("label.%d:\n", s.ElseLabel),
-		string(elseBody),
-		fmt.Sprintf("\t\tbr label %%label.%d\n", s.PhiLabel),
-		fmt.Sprintf("label.%d:\n", s.PhiLabel),
-		string(phiBody),
-	}
-
-	return IR(strings.Join(bodies, "\n"))
+	return Concat(
+		condBody,
+		IR(jumpBody),
+		IR(fmt.Sprintf("label.%d:\n", s.ThenLabel)),
+		thenBody,
+		IR(fmt.Sprintf("\t\tbr label %%label.%d\n", s.PhiLabel)),
+		IR(fmt.Sprintf("label.%d:\n", s.ElseLabel)),
+		elseBody,
+		IR(fmt.Sprintf("\t\tbr label %%label.%d\n", s.PhiLabel)),
+		IR(fmt.Sprintf("label.%d:\n", s.PhiLabel)),
+		IR(phiBody),
+	)
 }
 
 func (s *If) GenPrinter() IR {

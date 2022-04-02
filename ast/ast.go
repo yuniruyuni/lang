@@ -1,5 +1,7 @@
 package ast
 
+import "strings"
+
 type Reg int
 type Label int
 
@@ -27,6 +29,17 @@ func (g *Gen) NextLabel() Label {
 }
 
 type IR string
+
+type IRs []IR
+
+// Concat concatinate all given IRs into single IR.
+func Concat(irs ...IR) IR {
+	strs := make([]string, 0, len(irs))
+	for _, ir := range irs {
+		strs = append(strs, string(ir))
+	}
+	return IR(strings.Join(strs, "\n"))
+}
 
 type AST interface {
 	ResultReg() Reg

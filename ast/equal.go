@@ -2,7 +2,6 @@ package ast
 
 import (
 	"fmt"
-	"strings"
 )
 
 type Equal struct {
@@ -44,13 +43,7 @@ func (s *Equal) GenBody(g *Gen) IR {
 		s.TmpReg,
 	)
 
-	bodies := []string{
-		string(lhsBody),
-		string(rhsBody),
-		string(body),
-	}
-
-	return IR(strings.Join(bodies, "\n"))
+	return Concat(lhsBody, rhsBody, IR(body))
 }
 
 func (s *Equal) GenPrinter() IR {

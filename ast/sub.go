@@ -2,7 +2,6 @@ package ast
 
 import (
 	"fmt"
-	"strings"
 )
 
 type Sub struct {
@@ -39,13 +38,7 @@ func (s *Sub) GenBody(g *Gen) IR {
 		s.RHS.ResultReg(),
 	)
 
-	bodies := []string{
-		string(lhsBody),
-		string(rhsBody),
-		string(body),
-	}
-
-	return IR(strings.Join(bodies, "\n"))
+	return Concat(lhsBody, rhsBody, IR(body))
 }
 
 func (s *Sub) GenPrinter() IR {
