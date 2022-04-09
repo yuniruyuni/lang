@@ -9,6 +9,10 @@ type Add struct {
 	RHS AST // y
 }
 
+func (s *Add) Name() string {
+	return ""
+}
+
 func (s *Add) ResultReg() Reg {
 	return s.Result
 }

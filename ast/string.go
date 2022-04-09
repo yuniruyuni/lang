@@ -6,6 +6,10 @@ type String struct {
 	Word string
 }
 
+func (nd *String) Name() string {
+	return "str" // TODO: determine specific name for each ast node.
+}
+
 func (s *String) ResultReg() Reg {
 	return 0
 }
@@ -20,10 +24,6 @@ const (
 
 func (nd *String) WordLen() int {
 	return len(nd.Word) + nullCharSize
-}
-
-func (nd *String) Name() string {
-	return "str" // TODO: determine specific name for each ast node.
 }
 
 func (nd *String) GenHeader() ir.IR {

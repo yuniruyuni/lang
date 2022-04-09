@@ -43,7 +43,7 @@ fail() {
     got=`cat ${OUTPUT}`
 
     if [ "$got" == "$want" ]; then
-        echo "[SUCCEED] $args => $got"
+        echo "[SUCCEED(for fail test)] $args => $got"
     else
         echo "[FAILED(for fail test)] $args => want: $want, got: $got"
     fi
@@ -88,3 +88,16 @@ test 'if 0 { 10 } else { if 0 { 20 } else { 30 } }' '30'
 test_with 'test/if.yuni' '10'
 
 fail 'if' 'failed to parse code: invalid tokens'
+
+test '1; 2' '2'
+test '1; if 0 { 10 } else { 20 }' '20'
+test 'if 0 { 10 } else { 20; 30 }' '30'
+test 'if 0; 1 { 10 } else { 20; 30 }' '10'
+
+test 'let x = 10' '10'
+test 'let x = 10; 20' '20'
+
+test 'let x = 10; x = 20' '20'
+test 'let x = 10; x = 20; x * 10' '200'
+
+test_with 'test/var-if.yuni' '100'

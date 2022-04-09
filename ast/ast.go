@@ -34,6 +34,8 @@ type AST interface {
 	ResultReg() Reg
 	ResultLabel() Label
 
+	Name() string
+
 	GenHeader() ir.IR
 	GenBody(g *Gen) ir.IR
 	GenPrinter() ir.IR

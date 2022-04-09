@@ -120,6 +120,13 @@ func TestTokenizer_Tokenize(t *testing.T) {
 			},
 		},
 		{
+			name: "semicolon",
+			code: `;`,
+			want: []*token.Token{
+				{Kind: kind.Semicolon, Str: ";", Beg: 0, End: 1},
+			},
+		},
+		{
 			name: "quoted plus is a string",
 			code: `"+"`,
 			want: []*token.Token{
@@ -246,6 +253,13 @@ func TestTokenizer_Tokenize(t *testing.T) {
 			code: `else`,
 			want: []*token.Token{
 				{Kind: kind.Else, Str: "else", Beg: 0, End: 4},
+			},
+		},
+		{
+			name: "let",
+			code: `let`,
+			want: []*token.Token{
+				{Kind: kind.Let, Str: "let", Beg: 0, End: 3},
 			},
 		},
 		{

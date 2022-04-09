@@ -10,6 +10,10 @@ type Equal struct {
 	RHS AST // y
 }
 
+func (s *Equal) Name() string {
+	return ""
+}
+
 func (s *Equal) ResultReg() Reg {
 	return s.Result
 }

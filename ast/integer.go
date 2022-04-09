@@ -9,6 +9,10 @@ type Integer struct {
 	Value  int
 }
 
+func (s *Integer) Name() string {
+	return ""
+}
+
 func (nd *Integer) ResultReg() Reg {
 	return nd.Result
 }
