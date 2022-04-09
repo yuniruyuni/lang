@@ -45,7 +45,7 @@ fail() {
     if [ "$got" == "$want" ]; then
         echo "[SUCCEED] $args => $got"
     else
-        echo "[FAILED] $args => want: $want, got: $got"
+        echo "[FAILED(for fail test)] $args => want: $want, got: $got"
     fi
 }
 
