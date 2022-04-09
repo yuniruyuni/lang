@@ -43,7 +43,7 @@ fail() {
     got=`cat ${OUTPUT}`
 
     if [ "$got" == "$want" ]; then
-        echo "[SUCCEED] $args => $got"
+        echo "[SUCCEED(for fail test)] $args => $got"
     else
         echo "[FAILED(for fail test)] $args => want: $want, got: $got"
     fi
