@@ -10,6 +10,10 @@ type Less struct {
 	RHS AST // y
 }
 
+func (s *Less) Name() string {
+	return ""
+}
+
 func (s *Less) ResultReg() Reg {
 	return s.Result
 }

@@ -9,6 +9,10 @@ type Sequence struct {
 	RHS AST // y
 }
 
+func (s *Sequence) Name() string {
+	return ""
+}
+
 func (s *Sequence) ResultReg() Reg {
 	return s.Result
 }

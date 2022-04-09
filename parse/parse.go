@@ -22,8 +22,8 @@ type NonTerminal func(Pos) (Pos, ast.AST, error)
 // Execute := Sequence | Statement
 // [Sequence] := Statement ; Execute
 // Statement := Let | Assign | Cond | Res | String
-// [Let] := let Identifier = Cond
-// [Assign] := Identifier = Cond
+// [Let] := let Variable = Cond
+// [Assign] := Variable = Cond
 // Cond := Less | Equal | Expr
 // [Less] := Expr < Cond
 // [Equal] := Expr == Cond
@@ -33,7 +33,8 @@ type NonTerminal func(Pos) (Pos, ast.AST, error)
 // Term := Mul | Div | Res
 // [Mul] := Res * Term
 // [Div] := Res / Term
-// Res := If | Clause | Integer
+// Res := If | Clause | Variable | Integer
+// [Variable] := Identifier
 // Clause := ( Cond )
 // If := if Execute { Execute } else { Execute }
 type Parser struct {
@@ -102,7 +103,19 @@ func (p *Parser) Sequence(at Pos) (Pos, ast.AST, error) {
 }
 
 func (p *Parser) Statement(at Pos) (Pos, ast.AST, error) {
-	return Select(p.Cond, p.Res, p.String)(at)
+	return Select(p.Let, p.Cond, p.Res, p.String)(at)
+}
+
+func (p *Parser) Let(at Pos) (Pos, ast.AST, error) {
+	return Concat(
+		func(asts []ast.AST) ast.AST {
+			return &ast.Let{LHS: asts[1], RHS: asts[3]}
+		},
+		p.Skip(kind.Let),
+		p.Variable,
+		p.Skip(kind.Equal),
+		p.Cond,
+	)(at)
 }
 
 func (p *Parser) Cond(at Pos) (Pos, ast.AST, error) {
@@ -226,6 +239,14 @@ func (p *Parser) Integer(at Pos) (Pos, ast.AST, error) {
 		return at, nil, errors.New("Integer constant size over than max bit size")
 	}
 	return nx, &ast.Integer{Value: val}, nil
+}
+
+func (p *Parser) Variable(at Pos) (Pos, ast.AST, error) {
+	nx, t := p.Consume(kind.Identifier, at)
+	if t == nil {
+		return at, nil, errors.New("invalid token")
+	}
+	return nx, &ast.Variable{VarName: t.Str}, nil
 }
 
 func (p *Parser) String(at Pos) (Pos, ast.AST, error) {

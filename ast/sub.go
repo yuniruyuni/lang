@@ -9,6 +9,10 @@ type Sub struct {
 	RHS AST // y
 }
 
+func (nd *Sub) Name() string {
+	return ""
+}
+
 func (s *Sub) ResultReg() Reg {
 	return s.Result
 }

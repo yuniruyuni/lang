@@ -9,6 +9,10 @@ type Mul struct {
 	RHS AST // y
 }
 
+func (s *Mul) Name() string {
+	return ""
+}
+
 func (s *Mul) ResultReg() Reg {
 	return s.Result
 }

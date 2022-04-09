@@ -9,6 +9,10 @@ type Div struct {
 	RHS AST // y
 }
 
+func (s *Div) Name() string {
+	return ""
+}
+
 func (s *Div) ResultReg() Reg {
 	return s.Result
 }

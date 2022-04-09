@@ -15,6 +15,10 @@ type If struct {
 	PhiLabel  Label
 }
 
+func (s *If) Name() string {
+	return ""
+}
+
 func (s *If) ResultReg() Reg {
 	return s.Result
 }

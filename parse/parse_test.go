@@ -407,6 +407,36 @@ func TestParse(t *testing.T) {
 			want:    nil,
 			wantErr: true,
 		},
+		{
+			name: "let x = 10",
+			tokens: []*token.Token{
+				{
+					Kind: kind.Let,
+					Str:  "let",
+					Beg:  0, End: 3,
+				},
+				{
+					Kind: kind.Identifier,
+					Str:  "x",
+					Beg:  4, End: 5,
+				},
+				{
+					Kind: kind.Equal,
+					Str:  "=",
+					Beg:  4, End: 5,
+				},
+				{
+					Kind: kind.Integer,
+					Str:  "1",
+					Beg:  6, End: 7,
+				},
+			},
+			want: &ast.Let{
+				LHS: &ast.Variable{VarName: "x"},
+				RHS: &ast.Integer{Value: 1},
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
