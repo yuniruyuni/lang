@@ -88,3 +88,6 @@ test 'if 0 { 10 } else { if 0 { 20 } else { 30 } }' '30'
 test_with 'test/if.yuni' '10'
 
 fail 'if' 'failed to parse code: invalid tokens'
+
+test '1; 2' '2'
+test '1; if 0 { 10 } else { 20 }' '20'

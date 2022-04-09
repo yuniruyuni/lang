@@ -18,7 +18,12 @@ type NonTerminal func(Pos) (Pos, ast.AST, error)
 // Parser transforms this language into AST.
 // --- PEG ---
 // AST Emit will happen for x in [x].
-// Root := Cond | Res | String
+// Root := Exec
+// Execute := Sequence | Statement
+// [Sequence] := Statement ; Execute
+// Statement := Let | Assign | Cond | Res | String
+// [Let] := let Identifier = Cond
+// [Assign] := Identifier = Cond
 // Cond := Less | Equal | Expr
 // [Less] := Expr < Cond
 // [Equal] := Expr == Cond
@@ -69,7 +74,7 @@ func (p *Parser) End(at Pos) bool {
 }
 
 func (p *Parser) Root(at Pos) (Pos, ast.AST, error) {
-	nx, parsed, err := Select(p.Cond, p.Res, p.String)(at)
+	nx, parsed, err := p.Execute(at)
 	if err != nil {
 		return at, nil, err
 	}
@@ -79,6 +84,25 @@ func (p *Parser) Root(at Pos) (Pos, ast.AST, error) {
 	}
 
 	return nx, parsed, nil
+}
+
+func (p *Parser) Execute(at Pos) (Pos, ast.AST, error) {
+	return Select(p.Sequence, p.Statement)(at)
+}
+
+func (p *Parser) Sequence(at Pos) (Pos, ast.AST, error) {
+	return Concat(
+		func(asts []ast.AST) ast.AST {
+			return &ast.Sequence{LHS: asts[0], RHS: asts[2]}
+		},
+		p.Statement,
+		p.Skip(kind.Semicolon),
+		p.Execute,
+	)(at)
+}
+
+func (p *Parser) Statement(at Pos) (Pos, ast.AST, error) {
+	return Select(p.Cond, p.Res, p.String)(at)
 }
 
 func (p *Parser) Cond(at Pos) (Pos, ast.AST, error) {
