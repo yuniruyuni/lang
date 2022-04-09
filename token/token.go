@@ -11,6 +11,8 @@ type Token struct {
 	End  int       // the token end position in source code.
 }
 
+// Translate detects reserved words for identifiers and
+// it returns new Token that has precisely kind for such identifier.
 func (t *Token) Translate() *Token {
 	if t == nil {
 		return nil
@@ -26,20 +28,20 @@ func (t *Token) Translate() *Token {
 
 	switch t.Str {
 	case "if":
-		return &Token{
-			Kind: kind.If,
-			Str:  t.Str,
-			Beg:  t.Beg,
-			End:  t.End,
-		}
+		return t.changeKind(kind.If)
 	case "else":
-		return &Token{
-			Kind: kind.Else,
-			Str:  t.Str,
-			Beg:  t.Beg,
-			End:  t.End,
-		}
+		return t.changeKind(kind.Else)
 	default:
 		return t
+	}
+}
+
+// changeKind returns new token that is changed kind to k.
+func (t *Token) changeKind(k kind.Kind) *Token {
+	return &Token{
+		Kind: k,
+		Str:  t.Str,
+		Beg:  t.Beg,
+		End:  t.End,
 	}
 }
