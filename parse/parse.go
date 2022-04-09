@@ -35,7 +35,7 @@ type NonTerminal func(Pos) (Pos, ast.AST, error)
 // [Div] := Res / Term
 // Res := If | Clause | Integer
 // Clause := ( Cond )
-// If := if Cond { Cond } else { Cond }
+// If := if Execute { Execute } else { Execute }
 type Parser struct {
 	tokens []*token.Token
 }
@@ -203,13 +203,13 @@ func (p *Parser) If(at Pos) (Pos, ast.AST, error) {
 			}
 		},
 		p.Skip(kind.If),
-		p.Cond,
+		p.Execute,
 		p.Skip(kind.LeftCurly),
-		p.Cond,
+		p.Execute,
 		p.Skip(kind.RightCurly),
 		p.Skip(kind.Else),
 		p.Skip(kind.LeftCurly),
-		p.Cond,
+		p.Execute,
 		p.Skip(kind.RightCurly),
 	)(at)
 }

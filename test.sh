@@ -91,3 +91,5 @@ fail 'if' 'failed to parse code: invalid tokens'
 
 test '1; 2' '2'
 test '1; if 0 { 10 } else { 20 }' '20'
+test 'if 0 { 10 } else { 20; 30 }' '30'
+test 'if 0; 1 { 10 } else { 20; 30 }' '10'
