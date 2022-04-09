@@ -96,3 +96,5 @@ test 'if 0; 1 { 10 } else { 20; 30 }' '10'
 
 test 'let x = 10' '10'
 test 'let x = 10; 20' '20'
+
+test 'let x = 10; x = 20' '20'

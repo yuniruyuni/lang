@@ -103,7 +103,7 @@ func (p *Parser) Sequence(at Pos) (Pos, ast.AST, error) {
 }
 
 func (p *Parser) Statement(at Pos) (Pos, ast.AST, error) {
-	return Select(p.Let, p.Cond, p.Res, p.String)(at)
+	return Select(p.Let, p.Assign, p.Cond, p.Res, p.String)(at)
 }
 
 func (p *Parser) Let(at Pos) (Pos, ast.AST, error) {
@@ -112,6 +112,17 @@ func (p *Parser) Let(at Pos) (Pos, ast.AST, error) {
 			return &ast.Let{LHS: asts[1], RHS: asts[3]}
 		},
 		p.Skip(kind.Let),
+		p.Variable,
+		p.Skip(kind.Equal),
+		p.Cond,
+	)(at)
+}
+
+func (p *Parser) Assign(at Pos) (Pos, ast.AST, error) {
+	return Concat(
+		func(asts []ast.AST) ast.AST {
+			return &ast.Assign{LHS: asts[0], RHS: asts[2]}
+		},
 		p.Variable,
 		p.Skip(kind.Equal),
 		p.Cond,
