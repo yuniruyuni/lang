@@ -205,7 +205,7 @@ func (p *Parser) Div(at Pos) (Pos, ast.AST, error) {
 }
 
 func (p *Parser) Res(at Pos) (Pos, ast.AST, error) {
-	return Select(p.If, p.Clause, p.Integer)(at)
+	return Select(p.If, p.Clause, p.Variable, p.Integer)(at)
 }
 
 func (p *Parser) Clause(at Pos) (Pos, ast.AST, error) {

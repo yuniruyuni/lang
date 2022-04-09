@@ -5,6 +5,8 @@ import (
 )
 
 type Variable struct {
+	Result  Reg
+	Label   Label
 	VarName string
 }
 
@@ -13,26 +15,25 @@ func (s *Variable) Name() string {
 }
 
 func (s *Variable) ResultReg() Reg {
-	// TODO: implement
-	return 0
+	return s.Result
 }
 
 func (s *Variable) ResultLabel() Label {
-	// TODO: implement
-	return 0
+	return s.Label
 }
 
 func (s *Variable) GenHeader() ir.IR {
-	// TODO: implement
 	return ""
 }
 
 func (s *Variable) GenBody(g *Gen) ir.IR {
-	// TODO: implement
-	return ""
+	s.Result = g.NextReg()
+	s.Label = g.CurLabel()
+
+	return ir.IR(`%%%d = load i32, i32* %%%s, align 4`).
+		Expand(s.Result, s.Name())
 }
 
 func (s *Variable) GenPrinter() ir.IR {
-	// TODO: implement
-	return ""
+	return GenIntPrinter(s.Result)
 }
