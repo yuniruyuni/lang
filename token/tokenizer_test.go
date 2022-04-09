@@ -249,6 +249,13 @@ func TestTokenizer_Tokenize(t *testing.T) {
 			},
 		},
 		{
+			name: "let",
+			code: `let`,
+			want: []*token.Token{
+				{Kind: kind.Let, Str: "let", Beg: 0, End: 3},
+			},
+		},
+		{
 			name: "condition",
 			code: `if 1 { 10 } else { 20 }`,
 			want: []*token.Token{
