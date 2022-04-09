@@ -22,4 +22,5 @@ const (
 	RightCurly
 	If
 	Else
+	Let
 )
