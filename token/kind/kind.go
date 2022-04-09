@@ -23,4 +23,5 @@ const (
 	If
 	Else
 	Let
+	Semicolon
 )
