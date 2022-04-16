@@ -49,7 +49,7 @@ type Merger func([]ast.AST) ast.AST
 // call Merger by matched ASTs then the Merger's result return.
 // If there is a non-matched NonTerminal,
 // It returns the error of the NonTerminal.
-func Concat(m Merger, cands ...NonTerminal) NonTerminal {
+func (p *Parser) Concat(m Merger, cands ...NonTerminal) NonTerminal {
 	return func(at Pos) (Pos, ast.AST, error) {
 		asts := make([]ast.AST, 0, len(cands))
 
@@ -57,7 +57,7 @@ func Concat(m Merger, cands ...NonTerminal) NonTerminal {
 		for _, cand := range cands {
 			var parsed ast.AST
 			var err error
-			nx, parsed, err = cand(nx)
+			nx, parsed, err = p.CachedCall(cand, nx)
 			if err != nil {
 				return at, nil, err
 			}

@@ -105,7 +105,7 @@ func (p *Parser) Execute(at Pos) (Pos, ast.AST, error) {
 }
 
 func (p *Parser) Sequence(at Pos) (Pos, ast.AST, error) {
-	return Concat(
+	return p.Concat(
 		func(asts []ast.AST) ast.AST {
 			return &ast.Sequence{LHS: asts[0], RHS: asts[2]}
 		},
@@ -120,7 +120,7 @@ func (p *Parser) Statement(at Pos) (Pos, ast.AST, error) {
 }
 
 func (p *Parser) Let(at Pos) (Pos, ast.AST, error) {
-	return Concat(
+	return p.Concat(
 		func(asts []ast.AST) ast.AST {
 			return &ast.Let{LHS: asts[1], RHS: asts[3]}
 		},
@@ -132,7 +132,7 @@ func (p *Parser) Let(at Pos) (Pos, ast.AST, error) {
 }
 
 func (p *Parser) Assign(at Pos) (Pos, ast.AST, error) {
-	return Concat(
+	return p.Concat(
 		func(asts []ast.AST) ast.AST {
 			return &ast.Assign{LHS: asts[0], RHS: asts[2]}
 		},
@@ -147,7 +147,7 @@ func (p *Parser) Cond(at Pos) (Pos, ast.AST, error) {
 }
 
 func (p *Parser) Less(at Pos) (Pos, ast.AST, error) {
-	return Concat(
+	return p.Concat(
 		func(asts []ast.AST) ast.AST {
 			return &ast.Less{LHS: asts[0], RHS: asts[2]}
 		},
@@ -158,7 +158,7 @@ func (p *Parser) Less(at Pos) (Pos, ast.AST, error) {
 }
 
 func (p *Parser) Equal(at Pos) (Pos, ast.AST, error) {
-	return Concat(
+	return p.Concat(
 		func(asts []ast.AST) ast.AST {
 			return &ast.Equal{LHS: asts[0], RHS: asts[3]}
 		},
@@ -174,7 +174,7 @@ func (p *Parser) Expr(at Pos) (Pos, ast.AST, error) {
 }
 
 func (p *Parser) Add(at Pos) (Pos, ast.AST, error) {
-	return Concat(
+	return p.Concat(
 		func(asts []ast.AST) ast.AST {
 			return &ast.Add{LHS: asts[0], RHS: asts[2]}
 		},
@@ -185,7 +185,7 @@ func (p *Parser) Add(at Pos) (Pos, ast.AST, error) {
 }
 
 func (p *Parser) Sub(at Pos) (Pos, ast.AST, error) {
-	return Concat(
+	return p.Concat(
 		func(asts []ast.AST) ast.AST {
 			return &ast.Sub{LHS: asts[0], RHS: asts[2]}
 		},
@@ -200,7 +200,7 @@ func (p *Parser) Term(at Pos) (Pos, ast.AST, error) {
 }
 
 func (p *Parser) Mul(at Pos) (Pos, ast.AST, error) {
-	return Concat(
+	return p.Concat(
 		func(asts []ast.AST) ast.AST {
 			return &ast.Mul{LHS: asts[0], RHS: asts[2]}
 		},
@@ -214,7 +214,7 @@ func (p *Parser) Div(at Pos) (Pos, ast.AST, error) {
 	m := func(asts []ast.AST) ast.AST {
 		return &ast.Div{LHS: asts[0], RHS: asts[2]}
 	}
-	return Concat(m, p.Res, p.Skip(kind.Divide), p.Term)(at)
+	return p.Concat(m, p.Res, p.Skip(kind.Divide), p.Term)(at)
 }
 
 func (p *Parser) Res(at Pos) (Pos, ast.AST, error) {
@@ -222,7 +222,7 @@ func (p *Parser) Res(at Pos) (Pos, ast.AST, error) {
 }
 
 func (p *Parser) Clause(at Pos) (Pos, ast.AST, error) {
-	return Concat(
+	return p.Concat(
 		func(asts []ast.AST) ast.AST { return asts[1] },
 		p.Skip(kind.LeftParen),
 		p.Cond,
@@ -231,7 +231,7 @@ func (p *Parser) Clause(at Pos) (Pos, ast.AST, error) {
 }
 
 func (p *Parser) If(at Pos) (Pos, ast.AST, error) {
-	return Concat(
+	return p.Concat(
 		func(asts []ast.AST) ast.AST {
 			return &ast.If{
 				Cond: asts[1],
