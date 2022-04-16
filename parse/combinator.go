@@ -2,18 +2,37 @@ package parse
 
 import (
 	"errors"
+	"reflect"
 
 	"github.com/yuniruyuni/lang/ast"
 )
+
+// CachedCall calls f() and cache the result if not error.
+// NOTE: This function just can handle named-functions.
+func (p *Parser) CachedCall(f NonTerminal, at Pos) (Pos, ast.AST, error) {
+	ptr := reflect.ValueOf(f).Pointer()
+
+	key := Key{Ptr: ptr, At: at}
+	res, ok := p.cache[key]
+	if ok {
+		return res.Pos, res.Ast, nil
+	}
+
+	nx, parsed, err := f(at)
+	if err == nil {
+		p.cache[key] = &Result{Pos: nx, Ast: parsed}
+	}
+	return nx, parsed, err
+}
 
 // Select combines some target NonTerminals into single NonTerminal.
 // This new NonTerminal checks if targets match current tokens and
 // returns first maching NonTerminal result.
 // If there is no maching NonTerminal, It returns an "invalid tokens" error.
-func Select(cands ...NonTerminal) NonTerminal {
+func (p *Parser) Select(cands ...NonTerminal) NonTerminal {
 	return func(at Pos) (Pos, ast.AST, error) {
 		for _, cand := range cands {
-			nx, parsed, err := cand(at)
+			nx, parsed, err := p.CachedCall(cand, at)
 			if err == nil {
 				return nx, parsed, nil
 			}
