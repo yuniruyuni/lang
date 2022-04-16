@@ -18,3 +18,9 @@ test: clean build
 	# if you reader have opinion.
 	go test ./...
 	./test.sh
+
+bench: clean build
+	go test -bench Compile -o pprof/compile.bin -cpuprofile pprof/compile.out ./
+
+showprof:
+	go tool pprof -http=":8081" pprof/compile.bin pprof/compile.out
