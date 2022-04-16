@@ -12,9 +12,9 @@ import (
 	"github.com/yuniruyuni/lang/token"
 )
 
-func outputLL(root ast.AST) {
+func outputLL(root ast.AST) string {
 	ll := gen.LLFile{AST: root}
-	fmt.Print(ll.Generate())
+	return string(ll.Generate())
 }
 
 func tokenize(code string) ([]*token.Token, error) {
@@ -26,6 +26,20 @@ func tokenize(code string) ([]*token.Token, error) {
 	return tks, nil
 }
 
+func Compile(code string) (string, error) {
+	tks, err := tokenize(code)
+	if err != nil {
+		return "", fmt.Errorf("failed to tokenize code: %s", err.Error())
+	}
+
+	root, err := parse.Parse(tks)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse code: %s", err.Error())
+	}
+
+	return outputLL(root), nil
+}
+
 func main() {
 	bytes, err := ioutil.ReadAll(os.Stdin)
 	if err != nil {
@@ -33,17 +47,10 @@ func main() {
 	}
 	code := string(bytes)
 
-	tks, err := tokenize(code)
+	ll, err := Compile(code)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to tokenize code: %s", err.Error())
+		fmt.Fprint(os.Stderr, err.Error())
 		os.Exit(-1)
 	}
-
-	root, err := parse.Parse(tks)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to parse code: %s", err.Error())
-		os.Exit(-1)
-	}
-
-	outputLL(root)
+	fmt.Println(ll)
 }

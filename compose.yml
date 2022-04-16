@@ -15,3 +15,13 @@ services:
     entrypoint:
       - make
       - test
+
+  bench:
+    pull_policy: build
+    build:
+      context: .
+    volumes:
+      - ./:/lang
+    entrypoint:
+      - make
+      - bench

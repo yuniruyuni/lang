@@ -15,6 +15,18 @@ type Pos int
 // NonTerminal expresses non-terminal symbol in parser.
 type NonTerminal func(Pos) (Pos, ast.AST, error)
 
+type Key struct {
+	Ptr uintptr
+	At  Pos
+}
+
+type Result struct {
+	Pos Pos
+	Ast ast.AST
+}
+
+type Cache map[Key]*Result
+
 // Parser transforms this language into AST.
 // --- PEG ---
 // AST Emit will happen for x in [x].
@@ -39,6 +51,7 @@ type NonTerminal func(Pos) (Pos, ast.AST, error)
 // If := if Execute { Execute } else { Execute }
 type Parser struct {
 	tokens []*token.Token
+	cache  Cache
 }
 
 func (p *Parser) Len() Pos {
@@ -88,11 +101,11 @@ func (p *Parser) Root(at Pos) (Pos, ast.AST, error) {
 }
 
 func (p *Parser) Execute(at Pos) (Pos, ast.AST, error) {
-	return Select(p.Sequence, p.Statement)(at)
+	return p.Select(p.Sequence, p.Statement)(at)
 }
 
 func (p *Parser) Sequence(at Pos) (Pos, ast.AST, error) {
-	return Concat(
+	return p.Concat(
 		func(asts []ast.AST) ast.AST {
 			return &ast.Sequence{LHS: asts[0], RHS: asts[2]}
 		},
@@ -103,11 +116,11 @@ func (p *Parser) Sequence(at Pos) (Pos, ast.AST, error) {
 }
 
 func (p *Parser) Statement(at Pos) (Pos, ast.AST, error) {
-	return Select(p.Let, p.Assign, p.Cond, p.Res, p.String)(at)
+	return p.Select(p.Let, p.Assign, p.Cond, p.Res, p.String)(at)
 }
 
 func (p *Parser) Let(at Pos) (Pos, ast.AST, error) {
-	return Concat(
+	return p.Concat(
 		func(asts []ast.AST) ast.AST {
 			return &ast.Let{LHS: asts[1], RHS: asts[3]}
 		},
@@ -119,7 +132,7 @@ func (p *Parser) Let(at Pos) (Pos, ast.AST, error) {
 }
 
 func (p *Parser) Assign(at Pos) (Pos, ast.AST, error) {
-	return Concat(
+	return p.Concat(
 		func(asts []ast.AST) ast.AST {
 			return &ast.Assign{LHS: asts[0], RHS: asts[2]}
 		},
@@ -130,11 +143,11 @@ func (p *Parser) Assign(at Pos) (Pos, ast.AST, error) {
 }
 
 func (p *Parser) Cond(at Pos) (Pos, ast.AST, error) {
-	return Select(p.Less, p.Equal, p.Expr)(at)
+	return p.Select(p.Less, p.Equal, p.Expr)(at)
 }
 
 func (p *Parser) Less(at Pos) (Pos, ast.AST, error) {
-	return Concat(
+	return p.Concat(
 		func(asts []ast.AST) ast.AST {
 			return &ast.Less{LHS: asts[0], RHS: asts[2]}
 		},
@@ -145,7 +158,7 @@ func (p *Parser) Less(at Pos) (Pos, ast.AST, error) {
 }
 
 func (p *Parser) Equal(at Pos) (Pos, ast.AST, error) {
-	return Concat(
+	return p.Concat(
 		func(asts []ast.AST) ast.AST {
 			return &ast.Equal{LHS: asts[0], RHS: asts[3]}
 		},
@@ -157,11 +170,11 @@ func (p *Parser) Equal(at Pos) (Pos, ast.AST, error) {
 }
 
 func (p *Parser) Expr(at Pos) (Pos, ast.AST, error) {
-	return Select(p.Add, p.Sub, p.Term)(at)
+	return p.Select(p.Add, p.Sub, p.Term)(at)
 }
 
 func (p *Parser) Add(at Pos) (Pos, ast.AST, error) {
-	return Concat(
+	return p.Concat(
 		func(asts []ast.AST) ast.AST {
 			return &ast.Add{LHS: asts[0], RHS: asts[2]}
 		},
@@ -172,7 +185,7 @@ func (p *Parser) Add(at Pos) (Pos, ast.AST, error) {
 }
 
 func (p *Parser) Sub(at Pos) (Pos, ast.AST, error) {
-	return Concat(
+	return p.Concat(
 		func(asts []ast.AST) ast.AST {
 			return &ast.Sub{LHS: asts[0], RHS: asts[2]}
 		},
@@ -183,11 +196,11 @@ func (p *Parser) Sub(at Pos) (Pos, ast.AST, error) {
 }
 
 func (p *Parser) Term(at Pos) (Pos, ast.AST, error) {
-	return Select(p.Mul, p.Div, p.Res)(at)
+	return p.Select(p.Mul, p.Div, p.Res)(at)
 }
 
 func (p *Parser) Mul(at Pos) (Pos, ast.AST, error) {
-	return Concat(
+	return p.Concat(
 		func(asts []ast.AST) ast.AST {
 			return &ast.Mul{LHS: asts[0], RHS: asts[2]}
 		},
@@ -201,15 +214,15 @@ func (p *Parser) Div(at Pos) (Pos, ast.AST, error) {
 	m := func(asts []ast.AST) ast.AST {
 		return &ast.Div{LHS: asts[0], RHS: asts[2]}
 	}
-	return Concat(m, p.Res, p.Skip(kind.Divide), p.Term)(at)
+	return p.Concat(m, p.Res, p.Skip(kind.Divide), p.Term)(at)
 }
 
 func (p *Parser) Res(at Pos) (Pos, ast.AST, error) {
-	return Select(p.If, p.Clause, p.Variable, p.Integer)(at)
+	return p.Select(p.If, p.Clause, p.Variable, p.Integer)(at)
 }
 
 func (p *Parser) Clause(at Pos) (Pos, ast.AST, error) {
-	return Concat(
+	return p.Concat(
 		func(asts []ast.AST) ast.AST { return asts[1] },
 		p.Skip(kind.LeftParen),
 		p.Cond,
@@ -218,7 +231,7 @@ func (p *Parser) Clause(at Pos) (Pos, ast.AST, error) {
 }
 
 func (p *Parser) If(at Pos) (Pos, ast.AST, error) {
-	return Concat(
+	return p.Concat(
 		func(asts []ast.AST) ast.AST {
 			return &ast.If{
 				Cond: asts[1],
@@ -270,7 +283,7 @@ func (p *Parser) String(at Pos) (Pos, ast.AST, error) {
 }
 
 func Parse(tks []*token.Token) (ast.AST, error) {
-	parser := Parser{tokens: tks}
+	parser := Parser{tokens: tks, cache: Cache{}}
 	_, ast, err := parser.Root(0)
 	return ast, err
 }
