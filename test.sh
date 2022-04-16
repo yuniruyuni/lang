@@ -101,4 +101,4 @@ test 'let x = 10; x = 20' '20'
 test 'let x = 10; x = 20; x * 10' '200'
 
 test_with 'test/var-if.yuni' '100'
-test_with 'test/large.yuni' '1'
+test_with 'test/large.yuni' '40'
