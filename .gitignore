@@ -18,3 +18,4 @@ go.work
 /bin
 # ignore temp directory
 /.tmp
+/pprof
