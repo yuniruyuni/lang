@@ -10,10 +10,9 @@ type While struct {
 	Cond AST
 	Proc AST
 
-	EntryLabel Label
-	TryLabel   Label
-	ProcLabel  Label
-	EndLabel   Label
+	TryLabel  Label
+	ProcLabel Label
+	EndLabel  Label
 }
 
 func (s *While) Name() string {
@@ -33,7 +32,6 @@ func (s *While) GenHeader() ir.IR {
 }
 
 func (s *While) GenBody(g *Gen) ir.IR {
-	s.EntryLabel = g.NextLabel()
 	s.TryLabel = g.NextLabel()
 	s.Result = g.NextReg()
 	condBody := s.Cond.GenBody(g)
