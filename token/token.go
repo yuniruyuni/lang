@@ -33,6 +33,8 @@ func (t *Token) Translate() *Token {
 		return t.changeKind(kind.Else)
 	case "let":
 		return t.changeKind(kind.Let)
+	case "while":
+		return t.changeKind(kind.While)
 	default:
 		return t
 	}

@@ -33,7 +33,7 @@ type Cache map[Key]*Result
 // Root := Exec
 // Execute := Sequence | Statement
 // [Sequence] := Statement ; Execute
-// Statement := Let | Assign | Cond | Res | String
+// Statement := While | Let | Assign | Cond | Res | String
 // [Let] := let Variable = Cond
 // [Assign] := Variable = Cond
 // Cond := Less | Equal | Expr
@@ -48,7 +48,8 @@ type Cache map[Key]*Result
 // Res := If | Clause | Variable | Integer
 // [Variable] := Identifier
 // Clause := ( Cond )
-// If := if Execute { Execute } else { Execute }
+// [If] := if Execute { Execute } else { Execute }
+// [While] := while Cond { Execute }
 type Parser struct {
 	tokens []*token.Token
 	cache  Cache
@@ -116,7 +117,7 @@ func (p *Parser) Sequence(at Pos) (Pos, ast.AST, error) {
 }
 
 func (p *Parser) Statement(at Pos) (Pos, ast.AST, error) {
-	return p.Select(p.Let, p.Assign, p.Cond, p.Res, p.String)(at)
+	return p.Select(p.While, p.Let, p.Assign, p.Cond, p.Res, p.String)(at)
 }
 
 func (p *Parser) Let(at Pos) (Pos, ast.AST, error) {
@@ -245,6 +246,22 @@ func (p *Parser) If(at Pos) (Pos, ast.AST, error) {
 		p.Execute,
 		p.Skip(kind.RightCurly),
 		p.Skip(kind.Else),
+		p.Skip(kind.LeftCurly),
+		p.Execute,
+		p.Skip(kind.RightCurly),
+	)(at)
+}
+
+func (p *Parser) While(at Pos) (Pos, ast.AST, error) {
+	return p.Concat(
+		func(asts []ast.AST) ast.AST {
+			return &ast.While{
+				Cond: asts[1],
+				Proc: asts[3],
+			}
+		},
+		p.Skip(kind.While),
+		p.Cond,
 		p.Skip(kind.LeftCurly),
 		p.Execute,
 		p.Skip(kind.RightCurly),
