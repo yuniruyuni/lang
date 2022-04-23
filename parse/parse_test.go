@@ -462,6 +462,41 @@ func TestParse(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "while 1 { 2 }",
+			tokens: []*token.Token{
+				{
+					Kind: kind.While,
+					Str:  "while",
+					Beg:  0, End: 5,
+				},
+				{
+					Kind: kind.Integer,
+					Str:  "1",
+					Beg:  6, End: 7,
+				},
+				{
+					Kind: kind.LeftCurly,
+					Str:  "{",
+					Beg:  9, End: 10,
+				},
+				{
+					Kind: kind.Integer,
+					Str:  "2",
+					Beg:  11, End: 12,
+				},
+				{
+					Kind: kind.RightCurly,
+					Str:  "}",
+					Beg:  13, End: 14,
+				},
+			},
+			want: &ast.While{
+				Cond: &ast.Integer{Value: 1},
+				Proc: &ast.Integer{Value: 2},
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
