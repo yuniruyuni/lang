@@ -277,6 +277,17 @@ func TestTokenizer_Tokenize(t *testing.T) {
 				{Kind: kind.RightCurly, Str: "}", Beg: 22, End: 23},
 			},
 		},
+		{
+			name: "while",
+			code: `while 1 { 10 }`,
+			want: []*token.Token{
+				{Kind: kind.While, Str: "while", Beg: 0, End: 5},
+				{Kind: kind.Integer, Str: "1", Beg: 6, End: 7},
+				{Kind: kind.LeftCurly, Str: "{", Beg: 8, End: 9},
+				{Kind: kind.Integer, Str: "10", Beg: 10, End: 12},
+				{Kind: kind.RightCurly, Str: "}", Beg: 13, End: 14},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

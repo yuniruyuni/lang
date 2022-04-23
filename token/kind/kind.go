@@ -23,5 +23,6 @@ const (
 	If
 	Else
 	Let
+	While
 	Semicolon
 )
