@@ -34,6 +34,22 @@ test() {
     fi
 }
 
+interact() {
+    args="$1"
+    input="$2"
+    want="$3"
+
+    mkdir -p "${TMPDIR}"
+    echo "$args" | $TARGET > "${OUTPUT}"
+    got=`echo "$input" | lli ${OUTPUT}`
+
+    if [ "$got" == "$want" ]; then
+        echo "[SUCCEED] $args => $got"
+    else
+        echo "[FAILED] $args => want: $want, got: $got"
+    fi
+}
+
 fail() {
     args="$1"
     want="$2"
@@ -97,3 +113,5 @@ test_with 'test/fundef.yuni' '1'
 test_with 'test/args.yuni' '50'
 
 fail 'if' 'failed to parse code: invalid tokens'
+
+interact 'func main(){ let x = read(); printf("%d", x,) }' '23' '23'

@@ -37,7 +37,7 @@ func (ll *LLFile) Generate() ir.IR {
 	gen := ast.NewGen()
 
 	gen.RegisterFunc("printf", "i8*,...")
-	gen.RegisterFunc("read", "i8*,...")
+	gen.RegisterFunc("read", "")
 
 	return ir.Concat(
 		header,
