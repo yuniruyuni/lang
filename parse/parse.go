@@ -333,8 +333,12 @@ func (p *Parser) String(at Pos) (Pos, ast.AST, error) {
 	return nx, &ast.String{Word: word}, nil
 }
 
+func New(tks []*token.Token) *Parser {
+	return &Parser{tokens: tks, cache: Cache{}}
+}
+
 func Parse(tks []*token.Token) (ast.AST, error) {
-	parser := Parser{tokens: tks, cache: Cache{}}
-	_, ast, err := parser.Root(0)
+	p := New(tks)
+	_, ast, err := p.Root(0)
 	return ast, err
 }

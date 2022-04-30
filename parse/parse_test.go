@@ -13,12 +13,13 @@ import (
 	"github.com/yuniruyuni/lang/token/kind"
 )
 
-func TestParse(t *testing.T) {
+func TestParseExecute(t *testing.T) {
 	tests := []struct {
 		name    string
 		tokens  []*token.Token
 		want    ast.AST
 		wantErr bool
+		invalid bool
 	}{
 		{
 			name: `"abc" parses into String(word:"abc")`,
@@ -322,7 +323,7 @@ func TestParse(t *testing.T) {
 				{Kind: kind.Plus, Str: "+", Beg: 3, End: 4},
 			},
 			want:    nil,
-			wantErr: true,
+			invalid: true,
 		},
 		{
 			name: "add cannot consume term",
@@ -332,7 +333,7 @@ func TestParse(t *testing.T) {
 				{Kind: kind.RightParen, Str: ")", Beg: 2, End: 3},
 			},
 			want:    nil,
-			wantErr: true,
+			invalid: true,
 		},
 		{
 			name: "sub cannot consume term",
@@ -342,7 +343,7 @@ func TestParse(t *testing.T) {
 				{Kind: kind.RightParen, Str: ")", Beg: 2, End: 3},
 			},
 			want:    nil,
-			wantErr: true,
+			invalid: true,
 		},
 		{
 			name: "mul cannot consume term",
@@ -352,7 +353,7 @@ func TestParse(t *testing.T) {
 				{Kind: kind.RightParen, Str: ")", Beg: 2, End: 3},
 			},
 			want:    nil,
-			wantErr: true,
+			invalid: true,
 		},
 		{
 			name: "div cannot consume term",
@@ -362,7 +363,7 @@ func TestParse(t *testing.T) {
 				{Kind: kind.RightParen, Str: ")", Beg: 2, End: 3},
 			},
 			want:    nil,
-			wantErr: true,
+			invalid: true,
 		},
 		{
 			name: "lack of clause right paren",
@@ -372,6 +373,7 @@ func TestParse(t *testing.T) {
 			},
 			want:    nil,
 			wantErr: true,
+			invalid: true,
 		},
 		{
 			name: "invalid token for clause",
@@ -381,6 +383,7 @@ func TestParse(t *testing.T) {
 			},
 			want:    nil,
 			wantErr: true,
+			invalid: true,
 		},
 		{
 			name: "over than integer max",
@@ -394,6 +397,7 @@ func TestParse(t *testing.T) {
 			},
 			want:    nil,
 			wantErr: true,
+			invalid: true,
 		},
 		{
 			name: "error when just if",
@@ -406,6 +410,7 @@ func TestParse(t *testing.T) {
 			},
 			want:    nil,
 			wantErr: true,
+			invalid: true,
 		},
 		{
 			name: "let x = 10",
@@ -517,6 +522,48 @@ func TestParse(t *testing.T) {
 					},
 				},
 			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := parse.New(tt.tokens)
+			nx, got, err := p.Execute(0)
+
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if !tt.invalid && !p.End(nx) {
+				t.Errorf("parser.Execute() doesn't consume all tokens")
+			}
+
+			if !tt.invalid {
+				assert.DeepEqual(t, tt.want, got)
+			}
+		})
+	}
+}
+
+func TestParse(t *testing.T) {
+	tests := []struct {
+		name    string
+		tokens  []*token.Token
+		want    ast.AST
+		wantErr bool
+	}{
+		{
+			name: `func main(){1} parses into DefFunc("main", Integer(1))`,
+			tokens: []*token.Token{
+				{Kind: kind.Func, Str: "func", Beg: 0, End: 4},
+				{Kind: kind.Identifier, Str: "main", Beg: 6, End: 7},
+				{Kind: kind.LeftParen, Str: "(", Beg: 7, End: 8},
+				{Kind: kind.RightParen, Str: ")", Beg: 8, End: 9},
+				{Kind: kind.LeftCurly, Str: "{", Beg: 9, End: 10},
+				{Kind: kind.Integer, Str: "1", Beg: 10, End: 11},
+				{Kind: kind.RightCurly, Str: "}", Beg: 11, End: 12},
+			},
+			want: nil,
 		},
 	}
 	for _, tt := range tests {
