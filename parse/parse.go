@@ -30,7 +30,6 @@ type Cache map[Key]*Result
 // Parser transforms this language into AST.
 // --- PEG ---
 // AST Emit will happen for x in [x].
-// Root := Exec
 // Execute := Sequence | Statement
 // [Sequence] := Statement ; Execute
 // Statement := While | Let | Assign | Cond | Res | String
@@ -45,11 +44,13 @@ type Cache map[Key]*Result
 // Term := Mul | Div | Res
 // [Mul] := Res * Term
 // [Div] := Res / Term
-// Res := If | Clause | Variable | Integer
+// Res := Call | If | Clause | Variable | Integer
 // [Variable] := Identifier
 // Clause := ( Cond )
 // [If] := if Execute { Execute } else { Execute }
 // [While] := while Cond { Execute }
+// [Call] := Ident Comma Params Comma
+// [Params] := ( Res , )*
 type Parser struct {
 	tokens []*token.Token
 	cache  Cache
