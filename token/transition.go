@@ -30,6 +30,7 @@ var table = Transition{
 		{check: Ch('<'), emit: Emit(kind.Less), next: state.Init, retry: false},
 		{check: Ch('='), emit: Emit(kind.Equal), next: state.Init, retry: false},
 		{check: Ch(';'), emit: Emit(kind.Semicolon), next: state.Init, retry: false},
+		{check: Ch(','), emit: Emit(kind.Comma), next: state.Init, retry: false},
 		{check: IsDigit, emit: Save, next: state.Integer, retry: true},
 		{check: IsLetter, emit: Save, next: state.Identifier, retry: true},
 		{check: Any, emit: Emit(kind.Skip), next: state.Init, retry: false},

@@ -127,6 +127,13 @@ func TestTokenizer_Tokenize(t *testing.T) {
 			},
 		},
 		{
+			name: "comma",
+			code: `,`,
+			want: []*token.Token{
+				{Kind: kind.Comma, Str: ",", Beg: 0, End: 1},
+			},
+		},
+		{
 			name: "quoted plus is a string",
 			code: `"+"`,
 			want: []*token.Token{
@@ -286,6 +293,18 @@ func TestTokenizer_Tokenize(t *testing.T) {
 				{Kind: kind.LeftCurly, Str: "{", Beg: 8, End: 9},
 				{Kind: kind.Integer, Str: "10", Beg: 10, End: 12},
 				{Kind: kind.RightCurly, Str: "}", Beg: 13, End: 14},
+			},
+		},
+		{
+			name: "args",
+			code: `x,y,z,`,
+			want: []*token.Token{
+				{Kind: kind.Identifier, Str: "x", Beg: 0, End: 1},
+				{Kind: kind.Comma, Str: ",", Beg: 1, End: 2},
+				{Kind: kind.Identifier, Str: "y", Beg: 2, End: 3},
+				{Kind: kind.Comma, Str: ",", Beg: 3, End: 4},
+				{Kind: kind.Identifier, Str: "z", Beg: 4, End: 5},
+				{Kind: kind.Comma, Str: ",", Beg: 5, End: 6},
 			},
 		},
 	}

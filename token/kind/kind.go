@@ -25,4 +25,5 @@ const (
 	Let
 	While
 	Semicolon
+	Comma
 )
