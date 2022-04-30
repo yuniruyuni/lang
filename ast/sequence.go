@@ -9,7 +9,7 @@ type Sequence struct {
 	RHS AST // y
 }
 
-func (s *Sequence) Name() string {
+func (s *Sequence) Name() Name {
 	return ""
 }
 
@@ -21,8 +21,8 @@ func (s *Sequence) ResultLabel() Label {
 	return s.RHS.ResultLabel()
 }
 
-func (s *Sequence) GenHeader() ir.IR {
-	return s.LHS.GenHeader() + s.RHS.GenHeader()
+func (s *Sequence) GenHeader(g *Gen) ir.IR {
+	return s.LHS.GenHeader(g) + s.RHS.GenHeader(g)
 }
 
 func (s *Sequence) GenBody(g *Gen) ir.IR {
@@ -31,6 +31,10 @@ func (s *Sequence) GenBody(g *Gen) ir.IR {
 	s.Result = s.RHS.ResultReg()
 
 	return ir.Concat(lhsBody, rhsBody)
+}
+
+func (s *Sequence) GenArg() ir.IR {
+	return s.RHS.GenArg()
 }
 
 func (s *Sequence) GenPrinter() ir.IR {

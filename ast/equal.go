@@ -10,7 +10,7 @@ type Equal struct {
 	RHS AST // y
 }
 
-func (s *Equal) Name() string {
+func (s *Equal) Name() Name {
 	return ""
 }
 
@@ -22,8 +22,8 @@ func (s *Equal) ResultLabel() Label {
 	return s.RHS.ResultLabel()
 }
 
-func (s *Equal) GenHeader() ir.IR {
-	return s.LHS.GenHeader() + s.RHS.GenHeader()
+func (s *Equal) GenHeader(g *Gen) ir.IR {
+	return s.LHS.GenHeader(g) + s.RHS.GenHeader(g)
 }
 
 func (s *Equal) GenBody(g *Gen) ir.IR {
@@ -44,6 +44,10 @@ func (s *Equal) GenBody(g *Gen) ir.IR {
 	)
 
 	return ir.Concat(lhsBody, rhsBody, body)
+}
+
+func (s *Equal) GenArg() ir.IR {
+	return ir.IR(`i32 %%%d`).Expand(s.ResultReg())
 }
 
 func (s *Equal) GenPrinter() ir.IR {

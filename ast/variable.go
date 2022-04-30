@@ -7,10 +7,10 @@ import (
 type Variable struct {
 	Result  Reg
 	Label   Label
-	VarName string
+	VarName Name
 }
 
-func (s *Variable) Name() string {
+func (s *Variable) Name() Name {
 	return s.VarName
 }
 
@@ -22,7 +22,7 @@ func (s *Variable) ResultLabel() Label {
 	return s.Label
 }
 
-func (s *Variable) GenHeader() ir.IR {
+func (s *Variable) GenHeader(g *Gen) ir.IR {
 	return ""
 }
 
@@ -32,6 +32,10 @@ func (s *Variable) GenBody(g *Gen) ir.IR {
 
 	return ir.IR(`%%%d = load i32, i32* %%%s, align 4`).
 		Expand(s.Result, s.Name())
+}
+
+func (s *Variable) GenArg() ir.IR {
+	return ir.IR(`i32 %%%d`).Expand(s.ResultReg())
 }
 
 func (s *Variable) GenPrinter() ir.IR {

@@ -49,6 +49,7 @@ fail() {
     fi
 }
 
+
 test '"test"' 'test'
 test '"日本語"' '日本語'
 test ' "日本語" ' '日本語'
@@ -104,3 +105,5 @@ test_with 'test/var-if.yuni' '100'
 test_with 'test/large.yuni' '40'
 test_with 'test/while.yuni' '45'
 test_with 'test/fact.yuni' '362880'
+
+test 'printf("%d", 10, ); 100' '10100'

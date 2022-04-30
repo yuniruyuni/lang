@@ -510,7 +510,7 @@ func TestParse(t *testing.T) {
 			},
 			want: &ast.Call{
 				FuncName: &ast.FuncName{FuncName: "f"},
-				Params: &ast.Params{
+				Args: &ast.Args{
 					Values: []ast.AST{
 						&ast.Integer{Value: 123},
 						&ast.Integer{Value: 456},

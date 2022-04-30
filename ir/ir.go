@@ -16,11 +16,16 @@ type IRs []IR
 
 // Concat concatinate all given IRs into single IR.
 func Concat(irs ...IR) IR {
+	return Join("\n", irs...)
+}
+
+// Join concatinate all given IRs into single IR with separator.
+func Join(sep string, irs ...IR) IR {
 	strs := make([]string, 0, len(irs))
 	for _, ir := range irs {
 		strs = append(strs, string(ir))
 	}
-	return IR(strings.Join(strs, "\n"))
+	return IR(strings.Join(strs, sep))
 }
 
 type Template struct {

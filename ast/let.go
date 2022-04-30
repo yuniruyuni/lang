@@ -11,7 +11,7 @@ type Let struct {
 	RHS AST // y
 }
 
-func (s *Let) Name() string {
+func (s *Let) Name() Name {
 	return s.LHS.Name()
 }
 
@@ -23,8 +23,8 @@ func (s *Let) ResultLabel() Label {
 	return s.RHS.ResultLabel()
 }
 
-func (s *Let) GenHeader() ir.IR {
-	return s.RHS.GenHeader()
+func (s *Let) GenHeader(g *Gen) ir.IR {
+	return s.RHS.GenHeader(g)
 }
 
 func (s *Let) GenBody(g *Gen) ir.IR {
@@ -44,6 +44,10 @@ func (s *Let) GenBody(g *Gen) ir.IR {
 		)
 
 	return ir.Concat(rhsBody, body)
+}
+
+func (s *Let) GenArg() ir.IR {
+	return ir.IR(`i32 %%%d`).Expand(s.ResultReg())
 }
 
 func (s *Let) GenPrinter() ir.IR {

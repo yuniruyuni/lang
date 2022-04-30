@@ -5,10 +5,10 @@ import (
 )
 
 type FuncName struct {
-	FuncName string
+	FuncName Name
 }
 
-func (s *FuncName) Name() string {
+func (s *FuncName) Name() Name {
 	return s.FuncName
 }
 
@@ -20,12 +20,16 @@ func (s *FuncName) ResultLabel() Label {
 	return 0
 }
 
-func (s *FuncName) GenHeader() ir.IR {
+func (s *FuncName) GenHeader(g *Gen) ir.IR {
 	return ""
 }
 
 func (s *FuncName) GenBody(g *Gen) ir.IR {
 	return ""
+}
+
+func (s *FuncName) GenArg() ir.IR {
+	return ir.IR(`i32 %%%d`).Expand(s.ResultReg())
 }
 
 func (s *FuncName) GenPrinter() ir.IR {

@@ -43,11 +43,14 @@ type LLFile struct {
 }
 
 func (ll *LLFile) Generate() ir.IR {
-	gen := ast.Gen{}
+	gen := ast.NewGen()
 	_ = gen.NextReg()
 
-	header := ll.AST.GenHeader()
-	body := bodyOpen + ll.AST.GenBody(&gen) + ll.AST.GenPrinter() + bodyClose
+	gen.RegisterFunc("printf", ast.Type{"i8*", "..."})
+	gen.RegisterFunc("read", ast.Type{"i8*", "..."})
+
+	header := ll.AST.GenHeader(gen)
+	body := bodyOpen + ll.AST.GenBody(gen) + ll.AST.GenPrinter() + bodyClose
 
 	return ir.IR(header + body)
 }
