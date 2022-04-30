@@ -7,7 +7,7 @@ type Params struct {
 	CondReg Reg
 
 	// for `x, y, z,`
-	Vars []AST
+	Values []AST
 }
 
 func (s *Params) Name() string {
