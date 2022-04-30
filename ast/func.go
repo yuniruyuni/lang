@@ -23,15 +23,28 @@ func (s *Func) ResultLabel() Label {
 }
 
 func (s *Func) GenHeader(g *Gen) ir.IR {
-	return ""
+	return s.Execute.GenHeader(g)
 }
 
 func (s *Func) GenBody(g *Gen) ir.IR {
-	return ""
+	name := s.Name()
+	params := s.Params.GenBody(g)
+	body := s.Execute.GenBody(g)
+
+	return ir.IR(`
+		define i32 @%s(%s) {
+			%s
+			ret i32 %%%d
+		}
+	`).Expand(
+		name, params,
+		body,
+		s.Execute.ResultReg(),
+	)
 }
 
 func (s *Func) GenArg() ir.IR {
-	return ir.IR(`i32 %%%d`).Expand(s.ResultReg())
+	return ""
 }
 
 func (s *Func) GenPrinter() ir.IR {

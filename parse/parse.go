@@ -51,7 +51,7 @@ type Cache map[Key]*Result
 // [If] := if Execute { Execute } else { Execute }
 // [While] := while Cond { Execute }
 // [Call] := Ident Comma Params Comma
-// [Args] := ( Res , )*
+// [Args] := ( Cond , )*
 // [Func] := func FuncName(Params){ Execute }
 // [Params] := ( Identifier , )*
 type Parser struct {
@@ -300,7 +300,7 @@ func (p *Parser) Args(at Pos) (Pos, ast.AST, error) {
 		},
 		p.Concat(
 			func(asts []ast.AST) ast.AST { return asts[0] },
-			p.Res,
+			p.Cond,
 			p.Skip(kind.Comma),
 		),
 	)(at)

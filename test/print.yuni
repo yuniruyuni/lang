@@ -1,0 +1,8 @@
+func main() {
+    printf("test",);
+    printf("日本語",);
+    printf( "日本語",);
+    printf("日本語",);'
+    printf( "日本語",);
+    0
+}

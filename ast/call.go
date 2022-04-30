@@ -23,7 +23,7 @@ func (s *Call) ResultReg() Reg {
 }
 
 func (s *Call) ResultLabel() Label {
-	return 0
+	return s.Args.ResultLabel()
 }
 
 func (s *Call) GenHeader(g *Gen) ir.IR {

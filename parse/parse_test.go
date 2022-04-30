@@ -573,6 +573,46 @@ func TestParse(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: `func main(){f("%d",1+1,)} will be parsed properly`,
+			tokens: []*token.Token{
+				{Kind: kind.Func, Str: "func", Beg: 0, End: 4},
+				{Kind: kind.Identifier, Str: "main", Beg: 6, End: 7},
+				{Kind: kind.LeftParen, Str: "(", Beg: 7, End: 8},
+				{Kind: kind.RightParen, Str: ")", Beg: 8, End: 9},
+				{Kind: kind.LeftCurly, Str: "{", Beg: 9, End: 10},
+				{Kind: kind.Identifier, Str: "f", Beg: 10, End: 11},
+				{Kind: kind.LeftParen, Str: `(`, Beg: 11, End: 12},
+				{Kind: kind.String, Str: `"%d"`, Beg: 12, End: 15},
+				{Kind: kind.Comma, Str: ",", Beg: 15, End: 16},
+				{Kind: kind.Integer, Str: "1", Beg: 16, End: 17},
+				{Kind: kind.Plus, Str: "+", Beg: 17, End: 18},
+				{Kind: kind.Integer, Str: "1", Beg: 18, End: 19},
+				{Kind: kind.Comma, Str: ",", Beg: 19, End: 20},
+				{Kind: kind.RightParen, Str: `)`, Beg: 20, End: 21},
+				{Kind: kind.RightCurly, Str: "}", Beg: 21, End: 22},
+			},
+			want: &ast.Definitions{
+				Defs: []ast.AST{
+					&ast.Func{
+						FuncName: &ast.FuncName{FuncName: "main"},
+						Params:   &ast.Params{Vars: []ast.AST{}},
+						Execute: &ast.Call{
+							FuncName: &ast.FuncName{FuncName: "f"},
+							Args: &ast.Args{
+								Values: []ast.AST{
+									&ast.String{Word: "%d"},
+									&ast.Add{
+										LHS: &ast.Integer{Value: 1},
+										RHS: &ast.Integer{Value: 1},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

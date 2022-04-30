@@ -47,6 +47,10 @@ func (g *Gen) NextReg() Reg {
 	return g.reg
 }
 
+func (g *Gen) ResetReg() {
+	g.reg = 0
+}
+
 func (g *Gen) CurLabel() Label {
 	return g.label
 }
@@ -54,6 +58,10 @@ func (g *Gen) CurLabel() Label {
 func (g *Gen) NextLabel() Label {
 	g.label += 1
 	return g.label
+}
+
+func (g *Gen) ResetLabel() {
+	g.label = 0
 }
 
 func (g *Gen) RegisterFunc(n Name, t Type) {

@@ -21,17 +21,31 @@ func (s *Definitions) ResultLabel() Label {
 }
 
 func (s *Definitions) GenHeader(g *Gen) ir.IR {
-	return ""
+	headers := make([]ir.IR, 0, len(s.Defs))
+
+	for _, d := range s.Defs {
+		headers = append(headers, d.GenHeader(g))
+	}
+
+	return ir.Concat(headers...)
 }
 
 func (s *Definitions) GenBody(g *Gen) ir.IR {
-	return ""
+	bodies := make([]ir.IR, 0, len(s.Defs))
+
+	for _, d := range s.Defs {
+		g.ResetReg()
+		g.ResetLabel()
+		bodies = append(bodies, d.GenBody(g))
+	}
+
+	return ir.Concat(bodies...)
 }
 
 func (s *Definitions) GenArg() ir.IR {
-	return ir.IR(`i32 %%%d`).Expand(s.ResultReg())
+	return ""
 }
 
 func (s *Definitions) GenPrinter() ir.IR {
-	return GenIntPrinter(s.Result)
+	return ""
 }

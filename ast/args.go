@@ -3,8 +3,7 @@ package ast
 import "github.com/yuniruyuni/lang/ir"
 
 type Args struct {
-	Result  Reg
-	CondReg Reg
+	Result Reg
 
 	// for `x, y, z,`
 	Values []AST
@@ -19,7 +18,7 @@ func (s *Args) ResultReg() Reg {
 }
 
 func (s *Args) ResultLabel() Label {
-	return 0
+	return s.Values[len(s.Values)-1].ResultLabel()
 }
 
 func (s *Args) GenHeader(g *Gen) ir.IR {

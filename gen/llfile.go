@@ -43,6 +43,5 @@ func (ll *LLFile) Generate() ir.IR {
 		header,
 		ll.AST.GenHeader(gen),
 		ll.AST.GenBody(gen),
-		ll.AST.GenPrinter(),
 	)
 }

@@ -1,11 +1,11 @@
 func main() {
     if 1 {
         if 1 {
-            10
+            printf("%d", 10,)
         } else {
-            20
+            printf("%d", 20,)
         }
     } else {
-        30
+        printf("%d", 30,)
     }
 }
