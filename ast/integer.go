@@ -9,8 +9,12 @@ type Integer struct {
 	Value  int
 }
 
-func (s *Integer) Name() string {
+func (s *Integer) Name() Name {
 	return ""
+}
+
+func (s *Integer) Type() Type {
+	return "i32"
 }
 
 func (nd *Integer) ResultReg() Reg {
@@ -21,7 +25,7 @@ func (s *Integer) ResultLabel() Label {
 	return s.Label
 }
 
-func (nd *Integer) GenHeader() ir.IR {
+func (nd *Integer) GenHeader(g *Gen) ir.IR {
 	return "\n"
 }
 
@@ -37,6 +41,10 @@ func (nd *Integer) GenBody(g *Gen) ir.IR {
 	`).Expand(
 		nd.Alloc, nd.Value, nd.Alloc, nd.Result, nd.Alloc,
 	)
+}
+
+func (s *Integer) GenArg() ir.IR {
+	return ir.IR(`i32 %%%d`).Expand(s.ResultReg())
 }
 
 func (nd *Integer) GenPrinter() ir.IR {

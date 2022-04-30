@@ -24,5 +24,7 @@ const (
 	Else
 	Let
 	While
+	Func
 	Semicolon
+	Comma
 )

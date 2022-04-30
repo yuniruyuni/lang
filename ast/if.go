@@ -15,8 +15,12 @@ type If struct {
 	PhiLabel  Label
 }
 
-func (s *If) Name() string {
+func (s *If) Name() Name {
 	return ""
+}
+
+func (s *If) Type() Type {
+	return "i32"
 }
 
 func (s *If) ResultReg() Reg {
@@ -27,8 +31,8 @@ func (s *If) ResultLabel() Label {
 	return s.PhiLabel
 }
 
-func (s *If) GenHeader() ir.IR {
-	return s.Cond.GenHeader() + s.Then.GenHeader() + s.Else.GenHeader()
+func (s *If) GenHeader(g *Gen) ir.IR {
+	return s.Cond.GenHeader(g) + s.Then.GenHeader(g) + s.Else.GenHeader(g)
 }
 
 func (s *If) GenBody(g *Gen) ir.IR {
@@ -77,6 +81,10 @@ func (s *If) GenBody(g *Gen) ir.IR {
 		s.Else.ResultReg(),
 		s.Else.ResultLabel(),
 	)
+}
+
+func (s *If) GenArg() ir.IR {
+	return ir.IR(`i32 %%%d`).Expand(s.ResultReg())
 }
 
 func (s *If) GenPrinter() ir.IR {

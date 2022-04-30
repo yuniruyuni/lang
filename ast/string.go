@@ -1,20 +1,29 @@
 package ast
 
-import "github.com/yuniruyuni/lang/ir"
+import (
+	"fmt"
+
+	"github.com/yuniruyuni/lang/ir"
+)
 
 type String struct {
-	Word string
+	NamePostfix Constant
+	Word        string
 }
 
-func (nd *String) Name() string {
-	return "str" // TODO: determine specific name for each ast node.
+func (nd *String) Name() Name {
+	return Name(fmt.Sprintf("str.%d", nd.NamePostfix))
 }
 
-func (s *String) ResultReg() Reg {
+func (s *String) Type() Type {
+	return "i8*"
+}
+
+func (nd *String) ResultReg() Reg {
 	return 0
 }
 
-func (s *String) ResultLabel() Label {
+func (nd *String) ResultLabel() Label {
 	return 0
 }
 
@@ -26,7 +35,9 @@ func (nd *String) WordLen() int {
 	return len(nd.Word) + nullCharSize
 }
 
-func (nd *String) GenHeader() ir.IR {
+func (nd *String) GenHeader(g *Gen) ir.IR {
+	nd.NamePostfix = g.NextConstant()
+
 	n := nd.Name()
 	w := nd.Word
 	l := nd.WordLen()
@@ -36,13 +47,24 @@ func (nd *String) GenHeader() ir.IR {
 }
 
 func (nd *String) GenBody(g *Gen) ir.IR {
-	n := nd.Name()
-	l := nd.WordLen()
-
-	return ir.IR(`call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([%d x i8], [%d x i8]* @.%s, i64 0, i64 0))`).
-		Expand(l, l, n)
+	return ""
 }
 
-func (s *String) GenPrinter() ir.IR {
-	return ""
+func (nd *String) GenArg() ir.IR {
+	n := nd.Name()
+	l := nd.WordLen()
+	return ir.IR(`
+		i8* getelementptr inbounds (
+			[%d x i8],
+			[%d x i8]* @.%s,
+			i64 0,
+			i64 0
+		)
+	`).Expand(
+		l, l, n,
+	)
+}
+
+func (nd *String) GenPrinter() ir.IR {
+	return ir.IR(`call i32 (i8*, ...) @printf(%s)`).Expand(nd.GenArg())
 }

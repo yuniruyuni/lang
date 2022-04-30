@@ -5,31 +5,43 @@ import (
 	"github.com/yuniruyuni/lang/ir"
 )
 
-const bodyOpen = `
+const header = ir.IR(`
 @.intfmt = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
+@.readfmt = private unnamed_addr constant [4 x i8] c"%d\0A\00", align 1
 
-define i32 @main() {
+define i32 @read() {
 	%1 = alloca i32, align 4
 	store i32 0, i32* %1, align 4
-`
-
-const bodyClose = `
-	ret i32 0
+	call i32 (i8*, ...) @scanf(
+		i8* getelementptr inbounds (
+			[4 x i8],
+			[4 x i8]* @.readfmt,
+			i64 0,
+			i64 0
+		),
+		i32* %1
+	)
+	%3 = load i32, i32* %1, align 4
+	ret i32 %3
 }
 
+declare i32 @scanf(i8*, ...)
 declare i32 @printf(i8*, ...)
-`
+`)
 
 type LLFile struct {
 	AST ast.AST
 }
 
 func (ll *LLFile) Generate() ir.IR {
-	gen := ast.Gen{}
-	_ = gen.NextReg()
+	gen := ast.NewGen()
 
-	header := ll.AST.GenHeader()
-	body := bodyOpen + ll.AST.GenBody(&gen) + ll.AST.GenPrinter() + bodyClose
+	gen.RegisterFunc("printf", "i8*,...")
+	gen.RegisterFunc("read", "")
 
-	return ir.IR(header + body)
+	return ir.Concat(
+		header,
+		ll.AST.GenHeader(gen),
+		ll.AST.GenBody(gen),
+	)
 }

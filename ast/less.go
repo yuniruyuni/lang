@@ -10,8 +10,12 @@ type Less struct {
 	RHS AST // y
 }
 
-func (s *Less) Name() string {
+func (s *Less) Name() Name {
 	return ""
+}
+
+func (s *Less) Type() Type {
+	return "i32"
 }
 
 func (s *Less) ResultReg() Reg {
@@ -22,8 +26,8 @@ func (s *Less) ResultLabel() Label {
 	return s.RHS.ResultLabel()
 }
 
-func (s *Less) GenHeader() ir.IR {
-	return s.LHS.GenHeader() + s.RHS.GenHeader()
+func (s *Less) GenHeader(g *Gen) ir.IR {
+	return s.LHS.GenHeader(g) + s.RHS.GenHeader(g)
 }
 
 func (s *Less) GenBody(g *Gen) ir.IR {
@@ -44,6 +48,10 @@ func (s *Less) GenBody(g *Gen) ir.IR {
 	)
 
 	return ir.Concat(lhsBody, rhsBody, body)
+}
+
+func (s *Less) GenArg() ir.IR {
+	return ir.IR(`i32 %%%d`).Expand(s.ResultReg())
 }
 
 func (s *Less) GenPrinter() ir.IR {

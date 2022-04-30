@@ -30,10 +30,10 @@ type Cache map[Key]*Result
 // Parser transforms this language into AST.
 // --- PEG ---
 // AST Emit will happen for x in [x].
-// Root := Exec
+// Root := ( Func )*
 // Execute := Sequence | Statement
 // [Sequence] := Statement ; Execute
-// Statement := While | Let | Assign | Cond | Res | String
+// Statement := While | Let | Assign | Cond | Res
 // [Let] := let Variable = Cond
 // [Assign] := Variable = Cond
 // Cond := Less | Equal | Expr
@@ -45,11 +45,15 @@ type Cache map[Key]*Result
 // Term := Mul | Div | Res
 // [Mul] := Res * Term
 // [Div] := Res / Term
-// Res := If | Clause | Variable | Integer
+// Res := Call | If | Clause | Variable | Integer | String
 // [Variable] := Identifier
 // Clause := ( Cond )
 // [If] := if Execute { Execute } else { Execute }
 // [While] := while Cond { Execute }
+// [Call] := Ident Comma Params Comma
+// [Args] := ( Cond , )*
+// [Func] := func FuncName(Params){ Execute }
+// [Params] := ( Identifier , )*
 type Parser struct {
 	tokens []*token.Token
 	cache  Cache
@@ -89,7 +93,7 @@ func (p *Parser) End(at Pos) bool {
 }
 
 func (p *Parser) Root(at Pos) (Pos, ast.AST, error) {
-	nx, parsed, err := p.Execute(at)
+	nx, parsed, err := p.Definitions(at)
 	if err != nil {
 		return at, nil, err
 	}
@@ -99,6 +103,15 @@ func (p *Parser) Root(at Pos) (Pos, ast.AST, error) {
 	}
 
 	return nx, parsed, nil
+}
+
+func (p *Parser) Definitions(at Pos) (Pos, ast.AST, error) {
+	return p.Many(
+		func(asts []ast.AST) ast.AST {
+			return &ast.Definitions{Defs: asts}
+		},
+		p.Func,
+	)(at)
 }
 
 func (p *Parser) Execute(at Pos) (Pos, ast.AST, error) {
@@ -117,7 +130,7 @@ func (p *Parser) Sequence(at Pos) (Pos, ast.AST, error) {
 }
 
 func (p *Parser) Statement(at Pos) (Pos, ast.AST, error) {
-	return p.Select(p.While, p.Let, p.Assign, p.Cond, p.Res, p.String)(at)
+	return p.Select(p.While, p.Let, p.Assign, p.Cond, p.Res)(at)
 }
 
 func (p *Parser) Let(at Pos) (Pos, ast.AST, error) {
@@ -219,7 +232,7 @@ func (p *Parser) Div(at Pos) (Pos, ast.AST, error) {
 }
 
 func (p *Parser) Res(at Pos) (Pos, ast.AST, error) {
-	return p.Select(p.If, p.Clause, p.Variable, p.Integer)(at)
+	return p.Select(p.Call, p.If, p.Clause, p.Variable, p.Integer, p.String)(at)
 }
 
 func (p *Parser) Clause(at Pos) (Pos, ast.AST, error) {
@@ -268,6 +281,60 @@ func (p *Parser) While(at Pos) (Pos, ast.AST, error) {
 	)(at)
 }
 
+func (p *Parser) Call(at Pos) (Pos, ast.AST, error) {
+	return p.Concat(
+		func(asts []ast.AST) ast.AST {
+			return &ast.Call{FuncName: asts[0], Args: asts[2]}
+		},
+		p.FuncName,
+		p.Skip(kind.LeftParen),
+		p.Args,
+		p.Skip(kind.RightParen),
+	)(at)
+}
+
+func (p *Parser) Args(at Pos) (Pos, ast.AST, error) {
+	return p.Many(
+		func(asts []ast.AST) ast.AST {
+			return &ast.Args{Values: asts}
+		},
+		p.Concat(
+			func(asts []ast.AST) ast.AST { return asts[0] },
+			p.Cond,
+			p.Skip(kind.Comma),
+		),
+	)(at)
+}
+
+func (p *Parser) Func(at Pos) (Pos, ast.AST, error) {
+	return p.Concat(
+		func(asts []ast.AST) ast.AST {
+			return &ast.Func{FuncName: asts[1], Params: asts[3], Execute: asts[6]}
+		},
+		p.Skip(kind.Func),
+		p.FuncName,
+		p.Skip(kind.LeftParen),
+		p.Params,
+		p.Skip(kind.RightParen),
+		p.Skip(kind.LeftCurly),
+		p.Execute,
+		p.Skip(kind.RightCurly),
+	)(at)
+}
+
+func (p *Parser) Params(at Pos) (Pos, ast.AST, error) {
+	return p.Many(
+		func(asts []ast.AST) ast.AST {
+			return &ast.Params{Vars: asts}
+		},
+		p.Concat(
+			func(asts []ast.AST) ast.AST { return asts[0] },
+			p.Param,
+			p.Skip(kind.Comma),
+		),
+	)(at)
+}
+
 func (p *Parser) Integer(at Pos) (Pos, ast.AST, error) {
 	nx := at
 	nx, t := p.Consume(kind.Integer, nx)
@@ -287,7 +354,23 @@ func (p *Parser) Variable(at Pos) (Pos, ast.AST, error) {
 	if t == nil {
 		return at, nil, errors.New("invalid token")
 	}
-	return nx, &ast.Variable{VarName: t.Str}, nil
+	return nx, &ast.Variable{VarName: ast.Name(t.Str)}, nil
+}
+
+func (p *Parser) Param(at Pos) (Pos, ast.AST, error) {
+	nx, t := p.Consume(kind.Identifier, at)
+	if t == nil {
+		return at, nil, errors.New("invalid token")
+	}
+	return nx, &ast.Param{VarName: ast.Name(t.Str)}, nil
+}
+
+func (p *Parser) FuncName(at Pos) (Pos, ast.AST, error) {
+	nx, t := p.Consume(kind.Identifier, at)
+	if t == nil {
+		return at, nil, errors.New("invalid token")
+	}
+	return nx, &ast.FuncName{FuncName: ast.Name(t.Str)}, nil
 }
 
 func (p *Parser) String(at Pos) (Pos, ast.AST, error) {
@@ -299,8 +382,12 @@ func (p *Parser) String(at Pos) (Pos, ast.AST, error) {
 	return nx, &ast.String{Word: word}, nil
 }
 
+func New(tks []*token.Token) *Parser {
+	return &Parser{tokens: tks, cache: Cache{}}
+}
+
 func Parse(tks []*token.Token) (ast.AST, error) {
-	parser := Parser{tokens: tks, cache: Cache{}}
-	_, ast, err := parser.Root(0)
+	p := New(tks)
+	_, ast, err := p.Root(0)
 	return ast, err
 }

@@ -11,8 +11,12 @@ type Assign struct {
 	RHS AST // y
 }
 
-func (s *Assign) Name() string {
+func (s *Assign) Name() Name {
 	return s.LHS.Name()
+}
+
+func (s *Assign) Type() Type {
+	return "i32"
 }
 
 func (s *Assign) ResultReg() Reg {
@@ -23,8 +27,8 @@ func (s *Assign) ResultLabel() Label {
 	return s.RHS.ResultLabel()
 }
 
-func (s *Assign) GenHeader() ir.IR {
-	return s.RHS.GenHeader()
+func (s *Assign) GenHeader(g *Gen) ir.IR {
+	return s.RHS.GenHeader(g)
 }
 
 func (s *Assign) GenBody(g *Gen) ir.IR {
@@ -42,6 +46,10 @@ func (s *Assign) GenBody(g *Gen) ir.IR {
 		)
 
 	return ir.Concat(rhsBody, body)
+}
+
+func (s *Assign) GenArg() ir.IR {
+	return ir.IR(`i32 %%%d`).Expand(s.ResultReg())
 }
 
 func (s *Assign) GenPrinter() ir.IR {

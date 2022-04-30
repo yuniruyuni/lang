@@ -1,0 +1,8 @@
+func test() {
+    1
+}
+
+func main() {
+    let s = test();
+    printf("%d", s,)
+}

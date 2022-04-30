@@ -1,9 +1,11 @@
-if 1 {
+func main() {
     if 1 {
-        10
+        if 1 {
+            printf("%d", 10,)
+        } else {
+            printf("%d", 20,)
+        }
     } else {
-        20
+        printf("%d", 30,)
     }
-} else {
-    30
 }

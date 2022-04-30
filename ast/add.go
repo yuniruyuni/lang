@@ -9,8 +9,12 @@ type Add struct {
 	RHS AST // y
 }
 
-func (s *Add) Name() string {
+func (s *Add) Name() Name {
 	return ""
+}
+
+func (s *Add) Type() Type {
+	return "i32"
 }
 
 func (s *Add) ResultReg() Reg {
@@ -21,8 +25,8 @@ func (s *Add) ResultLabel() Label {
 	return s.RHS.ResultLabel()
 }
 
-func (s *Add) GenHeader() ir.IR {
-	return s.LHS.GenHeader() + s.RHS.GenHeader()
+func (s *Add) GenHeader(g *Gen) ir.IR {
+	return s.LHS.GenHeader(g) + s.RHS.GenHeader(g)
 }
 
 func (s *Add) GenBody(g *Gen) ir.IR {
@@ -34,6 +38,10 @@ func (s *Add) GenBody(g *Gen) ir.IR {
 		Expand(s.Result, s.LHS.ResultReg(), s.RHS.ResultReg())
 
 	return ir.Concat(lhsBody, rhsBody, body)
+}
+
+func (s *Add) GenArg() ir.IR {
+	return ir.IR(`i32 %%%d`).Expand(s.ResultReg())
 }
 
 func (s *Add) GenPrinter() ir.IR {

@@ -66,3 +66,19 @@ func (p *Parser) Concat(m Merger, cands ...NonTerminal) NonTerminal {
 		return nx, m(asts), nil
 	}
 }
+
+// Many takes a (empty/non-empty) sequence of NonTerminal and it makes single NonTerminal.
+func (p *Parser) Many(m Merger, cand NonTerminal) NonTerminal {
+	return func(at Pos) (Pos, ast.AST, error) {
+		asts := make([]ast.AST, 0)
+
+		for {
+			nx, parsed, err := p.CachedCall(cand, at)
+			if err != nil {
+				return at, m(asts), nil
+			}
+			at = nx
+			asts = append(asts, parsed)
+		}
+	}
+}

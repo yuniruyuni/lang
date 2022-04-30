@@ -9,8 +9,12 @@ type Mul struct {
 	RHS AST // y
 }
 
-func (s *Mul) Name() string {
+func (s *Mul) Name() Name {
 	return ""
+}
+
+func (s *Mul) Type() Type {
+	return "i32"
 }
 
 func (s *Mul) ResultReg() Reg {
@@ -21,8 +25,8 @@ func (s *Mul) ResultLabel() Label {
 	return s.RHS.ResultLabel()
 }
 
-func (s *Mul) GenHeader() ir.IR {
-	return s.LHS.GenHeader() + s.RHS.GenHeader()
+func (s *Mul) GenHeader(g *Gen) ir.IR {
+	return s.LHS.GenHeader(g) + s.RHS.GenHeader(g)
 }
 
 func (s *Mul) GenBody(g *Gen) ir.IR {
@@ -34,6 +38,10 @@ func (s *Mul) GenBody(g *Gen) ir.IR {
 		Expand(s.Result, s.LHS.ResultReg(), s.RHS.ResultReg())
 
 	return ir.Concat(lhsBody, rhsBody, body)
+}
+
+func (s *Mul) GenArg() ir.IR {
+	return ir.IR(`i32 %%%d`).Expand(s.ResultReg())
 }
 
 func (s *Mul) GenPrinter() ir.IR {

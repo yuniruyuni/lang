@@ -15,8 +15,12 @@ type While struct {
 	EndLabel  Label
 }
 
-func (s *While) Name() string {
+func (s *While) Name() Name {
 	return ""
+}
+
+func (s *While) Type() Type {
+	return "i32"
 }
 
 func (s *While) ResultReg() Reg {
@@ -27,8 +31,8 @@ func (s *While) ResultLabel() Label {
 	return s.EndLabel
 }
 
-func (s *While) GenHeader() ir.IR {
-	return s.Cond.GenHeader() + s.Proc.GenHeader()
+func (s *While) GenHeader(g *Gen) ir.IR {
+	return s.Cond.GenHeader(g) + s.Proc.GenHeader(g)
 }
 
 func (s *While) GenBody(g *Gen) ir.IR {
@@ -72,6 +76,10 @@ func (s *While) GenBody(g *Gen) ir.IR {
 		s.TryLabel,
 		s.EndLabel,
 	)
+}
+
+func (s *While) GenArg() ir.IR {
+	return ir.IR(`i32 %%%d`).Expand(s.ResultReg())
 }
 
 func (s *While) GenPrinter() ir.IR {
