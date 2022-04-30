@@ -307,6 +307,21 @@ func TestTokenizer_Tokenize(t *testing.T) {
 				{Kind: kind.Comma, Str: ",", Beg: 5, End: 6},
 			},
 		},
+		{
+			name: "func",
+			code: `func main(x,){ 0 }`,
+			want: []*token.Token{
+				{Kind: kind.Func, Str: "func", Beg: 0, End: 4},
+				{Kind: kind.Identifier, Str: "main", Beg: 5, End: 9},
+				{Kind: kind.LeftParen, Str: "(", Beg: 9, End: 10},
+				{Kind: kind.Identifier, Str: "x", Beg: 10, End: 11},
+				{Kind: kind.Comma, Str: ",", Beg: 11, End: 12},
+				{Kind: kind.RightParen, Str: ")", Beg: 12, End: 13},
+				{Kind: kind.LeftCurly, Str: "{", Beg: 13, End: 14},
+				{Kind: kind.Integer, Str: "0", Beg: 15, End: 16},
+				{Kind: kind.RightCurly, Str: "}", Beg: 17, End: 18},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
