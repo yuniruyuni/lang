@@ -30,6 +30,7 @@ type Cache map[Key]*Result
 // Parser transforms this language into AST.
 // --- PEG ---
 // AST Emit will happen for x in [x].
+// Root := ( Func )*
 // Execute := Sequence | Statement
 // [Sequence] := Statement ; Execute
 // Statement := While | Let | Assign | Cond | Res
@@ -50,7 +51,9 @@ type Cache map[Key]*Result
 // [If] := if Execute { Execute } else { Execute }
 // [While] := while Cond { Execute }
 // [Call] := Ident Comma Params Comma
-// [Params] := ( Res , )*
+// [Args] := ( Res , )*
+// [Func] := func FuncName(Params){ Execute }
+// [Params] := ( Identifier , )*
 type Parser struct {
 	tokens []*token.Token
 	cache  Cache
@@ -90,7 +93,7 @@ func (p *Parser) End(at Pos) bool {
 }
 
 func (p *Parser) Root(at Pos) (Pos, ast.AST, error) {
-	nx, parsed, err := p.Execute(at)
+	nx, parsed, err := p.Definitions(at)
 	if err != nil {
 		return at, nil, err
 	}
@@ -100,6 +103,15 @@ func (p *Parser) Root(at Pos) (Pos, ast.AST, error) {
 	}
 
 	return nx, parsed, nil
+}
+
+func (p *Parser) Definitions(at Pos) (Pos, ast.AST, error) {
+	return p.Many(
+		func(asts []ast.AST) ast.AST {
+			return &ast.Definitions{Defs: asts}
+		},
+		p.Func,
+	)(at)
 }
 
 func (p *Parser) Execute(at Pos) (Pos, ast.AST, error) {
@@ -276,12 +288,12 @@ func (p *Parser) Call(at Pos) (Pos, ast.AST, error) {
 		},
 		p.FuncName,
 		p.Skip(kind.LeftParen),
-		p.Params,
+		p.Args,
 		p.Skip(kind.RightParen),
 	)(at)
 }
 
-func (p *Parser) Params(at Pos) (Pos, ast.AST, error) {
+func (p *Parser) Args(at Pos) (Pos, ast.AST, error) {
 	return p.Many(
 		func(asts []ast.AST) ast.AST {
 			return &ast.Args{Values: asts}
@@ -289,6 +301,35 @@ func (p *Parser) Params(at Pos) (Pos, ast.AST, error) {
 		p.Concat(
 			func(asts []ast.AST) ast.AST { return asts[0] },
 			p.Res,
+			p.Skip(kind.Comma),
+		),
+	)(at)
+}
+
+func (p *Parser) Func(at Pos) (Pos, ast.AST, error) {
+	return p.Concat(
+		func(asts []ast.AST) ast.AST {
+			return &ast.Func{FuncName: asts[1], Params: asts[3], Execute: asts[6]}
+		},
+		p.Skip(kind.Func),
+		p.FuncName,
+		p.Skip(kind.LeftParen),
+		p.Params,
+		p.Skip(kind.RightParen),
+		p.Skip(kind.LeftCurly),
+		p.Execute,
+		p.Skip(kind.RightCurly),
+	)(at)
+}
+
+func (p *Parser) Params(at Pos) (Pos, ast.AST, error) {
+	return p.Many(
+		func(asts []ast.AST) ast.AST {
+			return &ast.Params{Vars: asts}
+		},
+		p.Concat(
+			func(asts []ast.AST) ast.AST { return asts[0] },
+			p.Variable,
 			p.Skip(kind.Comma),
 		),
 	)(at)

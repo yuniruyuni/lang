@@ -72,14 +72,12 @@ func (p *Parser) Many(m Merger, cand NonTerminal) NonTerminal {
 	return func(at Pos) (Pos, ast.AST, error) {
 		asts := make([]ast.AST, 0)
 
-		nx := at
 		for {
-			var err error
-			var parsed ast.AST
-			nx, parsed, err = p.CachedCall(cand, nx)
+			nx, parsed, err := p.CachedCall(cand, at)
 			if err != nil {
-				return nx, m(asts), nil
+				return at, m(asts), nil
 			}
+			at = nx
 			asts = append(asts, parsed)
 		}
 	}

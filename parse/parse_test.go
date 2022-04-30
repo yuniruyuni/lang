@@ -563,7 +563,15 @@ func TestParse(t *testing.T) {
 				{Kind: kind.Integer, Str: "1", Beg: 10, End: 11},
 				{Kind: kind.RightCurly, Str: "}", Beg: 11, End: 12},
 			},
-			want: nil,
+			want: &ast.Definitions{
+				Defs: []ast.AST{
+					&ast.Func{
+						FuncName: &ast.FuncName{FuncName: "main"},
+						Params:   &ast.Params{Vars: []ast.AST{}},
+						Execute:  &ast.Integer{Value: 1},
+					},
+				},
+			},
 		},
 	}
 	for _, tt := range tests {

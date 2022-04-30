@@ -1,7 +1,9 @@
-let s = 0;
-let i = 0;
-while i < 10 {
-    s = s + i;
-    i = i + 1;
-    s
+func main() {
+    let s = 0;
+    let i = 0;
+    while i < 10 {
+        s = s + i;
+        i = i + 1;
+        s
+    }
 }
