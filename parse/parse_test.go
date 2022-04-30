@@ -497,6 +497,27 @@ func TestParse(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: `f(123,456,) parses into Call("f", Params(123,456))`,
+			tokens: []*token.Token{
+				{Kind: kind.Identifier, Str: "f", Beg: 0, End: 3},
+				{Kind: kind.LeftParen, Str: "(", Beg: 0, End: 3},
+				{Kind: kind.Integer, Str: "123", Beg: 0, End: 3},
+				{Kind: kind.Comma, Str: ",", Beg: 0, End: 3},
+				{Kind: kind.Integer, Str: "456", Beg: 0, End: 3},
+				{Kind: kind.Comma, Str: ",", Beg: 0, End: 3},
+				{Kind: kind.RightParen, Str: ")", Beg: 0, End: 3},
+			},
+			want: &ast.Call{
+				FuncName: &ast.FuncName{FuncName: "f"},
+				Params: &ast.Params{
+					Values: []ast.AST{
+						&ast.Integer{Value: 123},
+						&ast.Integer{Value: 456},
+					},
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

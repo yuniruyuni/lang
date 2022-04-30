@@ -220,7 +220,7 @@ func (p *Parser) Div(at Pos) (Pos, ast.AST, error) {
 }
 
 func (p *Parser) Res(at Pos) (Pos, ast.AST, error) {
-	return p.Select(p.If, p.Clause, p.Variable, p.Integer)(at)
+	return p.Select(p.Call, p.If, p.Clause, p.Variable, p.Integer)(at)
 }
 
 func (p *Parser) Clause(at Pos) (Pos, ast.AST, error) {
@@ -269,6 +269,31 @@ func (p *Parser) While(at Pos) (Pos, ast.AST, error) {
 	)(at)
 }
 
+func (p *Parser) Call(at Pos) (Pos, ast.AST, error) {
+	return p.Concat(
+		func(asts []ast.AST) ast.AST {
+			return &ast.Call{FuncName: asts[0], Params: asts[2]}
+		},
+		p.FuncName,
+		p.Skip(kind.LeftParen),
+		p.Params,
+		p.Skip(kind.RightParen),
+	)(at)
+}
+
+func (p *Parser) Params(at Pos) (Pos, ast.AST, error) {
+	return p.Many(
+		func(asts []ast.AST) ast.AST {
+			return &ast.Params{Values: asts}
+		},
+		p.Concat(
+			func(asts []ast.AST) ast.AST { return asts[0] },
+			p.Res,
+			p.Skip(kind.Comma),
+		),
+	)(at)
+}
+
 func (p *Parser) Integer(at Pos) (Pos, ast.AST, error) {
 	nx := at
 	nx, t := p.Consume(kind.Integer, nx)
@@ -289,6 +314,14 @@ func (p *Parser) Variable(at Pos) (Pos, ast.AST, error) {
 		return at, nil, errors.New("invalid token")
 	}
 	return nx, &ast.Variable{VarName: t.Str}, nil
+}
+
+func (p *Parser) FuncName(at Pos) (Pos, ast.AST, error) {
+	nx, t := p.Consume(kind.Identifier, at)
+	if t == nil {
+		return at, nil, errors.New("invalid token")
+	}
+	return nx, &ast.FuncName{FuncName: t.Str}, nil
 }
 
 func (p *Parser) String(at Pos) (Pos, ast.AST, error) {
