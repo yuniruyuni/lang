@@ -1,0 +1,7 @@
+func test(x,){
+    x * 5
+}
+
+func main(){
+    printf("%d", test(10,),)
+}

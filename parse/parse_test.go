@@ -574,6 +574,78 @@ func TestParse(t *testing.T) {
 			},
 		},
 		{
+			name: `func test(x,){x} can parse properly`,
+			tokens: []*token.Token{
+				{Kind: kind.Func, Str: "func", Beg: 0, End: 4},
+				{Kind: kind.Identifier, Str: "main", Beg: 6, End: 7},
+				{Kind: kind.LeftParen, Str: "(", Beg: 7, End: 8},
+				{Kind: kind.Identifier, Str: "x", Beg: 6, End: 7},
+				{Kind: kind.Comma, Str: ",", Beg: 6, End: 7},
+				{Kind: kind.RightParen, Str: ")", Beg: 8, End: 9},
+				{Kind: kind.LeftCurly, Str: "{", Beg: 9, End: 10},
+				{Kind: kind.Identifier, Str: "x", Beg: 10, End: 11},
+				{Kind: kind.RightCurly, Str: "}", Beg: 11, End: 12},
+			},
+			want: &ast.Definitions{
+				Defs: []ast.AST{
+					&ast.Func{
+						FuncName: &ast.FuncName{FuncName: "main"},
+						Params: &ast.Params{
+							Vars: []ast.AST{
+								&ast.Param{VarName: "x"},
+							},
+						},
+						Execute: &ast.Variable{VarName: "x"},
+					},
+				},
+			},
+		},
+		{
+			name: `func f(x,){x} func g(x,){x} can parse properly`,
+			tokens: []*token.Token{
+				{Kind: kind.Func, Str: "func", Beg: 0, End: 4},
+				{Kind: kind.Identifier, Str: "f", Beg: 6, End: 7},
+				{Kind: kind.LeftParen, Str: "(", Beg: 7, End: 8},
+				{Kind: kind.Identifier, Str: "x", Beg: 6, End: 7},
+				{Kind: kind.Comma, Str: ",", Beg: 6, End: 7},
+				{Kind: kind.RightParen, Str: ")", Beg: 8, End: 9},
+				{Kind: kind.LeftCurly, Str: "{", Beg: 9, End: 10},
+				{Kind: kind.Identifier, Str: "x", Beg: 10, End: 11},
+				{Kind: kind.RightCurly, Str: "}", Beg: 11, End: 12},
+				{Kind: kind.Func, Str: "func", Beg: 0, End: 4},
+				{Kind: kind.Identifier, Str: "g", Beg: 6, End: 7},
+				{Kind: kind.LeftParen, Str: "(", Beg: 7, End: 8},
+				{Kind: kind.Identifier, Str: "x", Beg: 6, End: 7},
+				{Kind: kind.Comma, Str: ",", Beg: 6, End: 7},
+				{Kind: kind.RightParen, Str: ")", Beg: 8, End: 9},
+				{Kind: kind.LeftCurly, Str: "{", Beg: 9, End: 10},
+				{Kind: kind.Identifier, Str: "x", Beg: 10, End: 11},
+				{Kind: kind.RightCurly, Str: "}", Beg: 11, End: 12},
+			},
+			want: &ast.Definitions{
+				Defs: []ast.AST{
+					&ast.Func{
+						FuncName: &ast.FuncName{FuncName: "f"},
+						Params: &ast.Params{
+							Vars: []ast.AST{
+								&ast.Param{VarName: "x"},
+							},
+						},
+						Execute: &ast.Variable{VarName: "x"},
+					},
+					&ast.Func{
+						FuncName: &ast.FuncName{FuncName: "g"},
+						Params: &ast.Params{
+							Vars: []ast.AST{
+								&ast.Param{VarName: "x"},
+							},
+						},
+						Execute: &ast.Variable{VarName: "x"},
+					},
+				},
+			},
+		},
+		{
 			name: `func main(){f("%d",1+1,)} will be parsed properly`,
 			tokens: []*token.Token{
 				{Kind: kind.Func, Str: "func", Beg: 0, End: 4},

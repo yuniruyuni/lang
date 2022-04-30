@@ -11,13 +11,14 @@ type Label int
 type Constant int
 
 type Name string
-type Type []string
+type Type string
 
 type Gen struct {
 	reg      Reg
 	label    Label
 	constant Constant
 	types    map[Name]Type
+	vartypes map[Name]Type
 }
 
 func NewGen() *Gen {
@@ -64,6 +65,22 @@ func (g *Gen) ResetLabel() {
 	g.label = 0
 }
 
+func (g *Gen) RegisterVariable(n Name, t Type) {
+	g.vartypes[n] = t
+}
+
+func (g *Gen) ResetVariables() {
+	g.vartypes = map[Name]Type{}
+}
+
+func (g *Gen) GetVariable(n Name) (Type, error) {
+	t, ok := g.vartypes[n]
+	if !ok {
+		return "", fmt.Errorf("Variable %s doesn't exist.", n)
+	}
+	return t, nil
+}
+
 func (g *Gen) RegisterFunc(n Name, t Type) {
 	g.types[n] = t
 }
@@ -71,7 +88,7 @@ func (g *Gen) RegisterFunc(n Name, t Type) {
 func (g *Gen) GetFunc(n Name) (Type, error) {
 	t, ok := g.types[n]
 	if !ok {
-		return nil, fmt.Errorf("Function %s doesn't exist.", n)
+		return "", fmt.Errorf("Function %s doesn't exist.", n)
 	}
 	return t, nil
 }
@@ -81,6 +98,7 @@ type AST interface {
 	ResultLabel() Label
 
 	Name() Name
+	Type() Type
 
 	GenHeader(g *Gen) ir.IR
 	GenBody(g *Gen) ir.IR

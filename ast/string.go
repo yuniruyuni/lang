@@ -15,6 +15,10 @@ func (nd *String) Name() Name {
 	return Name(fmt.Sprintf("str.%d", nd.NamePostfix))
 }
 
+func (s *String) Type() Type {
+	return "i8*"
+}
+
 func (nd *String) ResultReg() Reg {
 	return 0
 }

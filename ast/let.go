@@ -15,6 +15,10 @@ func (s *Let) Name() Name {
 	return s.LHS.Name()
 }
 
+func (s *Let) Type() Type {
+	return "i32"
+}
+
 func (s *Let) ResultReg() Reg {
 	return s.Result
 }
@@ -28,6 +32,8 @@ func (s *Let) GenHeader(g *Gen) ir.IR {
 }
 
 func (s *Let) GenBody(g *Gen) ir.IR {
+	g.RegisterVariable(s.Name(), "i32*")
+
 	rhsBody := s.RHS.GenBody(g)
 	s.Result = g.NextReg()
 

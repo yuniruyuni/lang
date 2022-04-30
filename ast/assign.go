@@ -15,6 +15,10 @@ func (s *Assign) Name() Name {
 	return s.LHS.Name()
 }
 
+func (s *Assign) Type() Type {
+	return "i32"
+}
+
 func (s *Assign) ResultReg() Reg {
 	return s.Result
 }

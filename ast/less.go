@@ -14,6 +14,10 @@ func (s *Less) Name() Name {
 	return ""
 }
 
+func (s *Less) Type() Type {
+	return "i32"
+}
+
 func (s *Less) ResultReg() Reg {
 	return s.Result
 }

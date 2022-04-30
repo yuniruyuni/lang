@@ -14,6 +14,10 @@ func (s *Func) Name() Name {
 	return s.FuncName.Name()
 }
 
+func (s *Func) Type() Type {
+	return "i32"
+}
+
 func (s *Func) ResultReg() Reg {
 	return 0
 }
@@ -23,6 +27,7 @@ func (s *Func) ResultLabel() Label {
 }
 
 func (s *Func) GenHeader(g *Gen) ir.IR {
+	g.RegisterFunc(s.Name(), s.Params.Type())
 	return s.Execute.GenHeader(g)
 }
 

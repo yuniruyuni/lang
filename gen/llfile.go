@@ -36,8 +36,8 @@ type LLFile struct {
 func (ll *LLFile) Generate() ir.IR {
 	gen := ast.NewGen()
 
-	gen.RegisterFunc("printf", ast.Type{"i8*", "..."})
-	gen.RegisterFunc("read", ast.Type{"i8*", "..."})
+	gen.RegisterFunc("printf", "i8*,...")
+	gen.RegisterFunc("read", "i8*,...")
 
 	return ir.Concat(
 		header,

@@ -13,6 +13,10 @@ func (s *Sequence) Name() Name {
 	return ""
 }
 
+func (s *Sequence) Type() Type {
+	return s.RHS.Type()
+}
+
 func (s *Sequence) ResultReg() Reg {
 	return s.Result
 }

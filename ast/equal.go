@@ -14,6 +14,10 @@ func (s *Equal) Name() Name {
 	return ""
 }
 
+func (s *Equal) Type() Type {
+	return "i32"
+}
+
 func (s *Equal) ResultReg() Reg {
 	return s.Result
 }

@@ -1,8 +1,6 @@
 package ast
 
 import (
-	"strings"
-
 	"github.com/yuniruyuni/lang/ir"
 )
 
@@ -16,6 +14,10 @@ type Call struct {
 
 func (s *Call) Name() Name {
 	return ""
+}
+
+func (s *Call) Type() Type {
+	return "i32"
 }
 
 func (s *Call) ResultReg() Reg {
@@ -34,12 +36,10 @@ func (s *Call) GenBody(g *Gen) ir.IR {
 	argsBody := s.Args.GenBody(g)
 	s.Result = g.NextReg()
 
-	types, err := g.GetFunc(Name(s.FuncName.Name()))
+	t, err := g.GetFunc(Name(s.FuncName.Name()))
 	if err != nil {
 		panic(err)
 	}
-
-	typeDelc := strings.Join(types, ",")
 
 	args := s.Args.GenArg()
 
@@ -48,7 +48,7 @@ func (s *Call) GenBody(g *Gen) ir.IR {
 		%%%d = call i32 (%s) @%s(%s)
 	`).Expand(
 		argsBody,
-		s.Result, typeDelc, s.FuncName.Name(), args,
+		s.Result, t, s.FuncName.Name(), args,
 	)
 }
 

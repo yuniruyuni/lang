@@ -13,6 +13,10 @@ func (s *Add) Name() Name {
 	return ""
 }
 
+func (s *Add) Type() Type {
+	return "i32"
+}
+
 func (s *Add) ResultReg() Reg {
 	return s.Result
 }

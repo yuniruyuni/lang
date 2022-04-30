@@ -19,6 +19,10 @@ func (s *If) Name() Name {
 	return ""
 }
 
+func (s *If) Type() Type {
+	return "i32"
+}
+
 func (s *If) ResultReg() Reg {
 	return s.Result
 }

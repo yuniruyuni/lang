@@ -19,6 +19,10 @@ func (s *While) Name() Name {
 	return ""
 }
 
+func (s *While) Type() Type {
+	return "i32"
+}
+
 func (s *While) ResultReg() Reg {
 	return s.Result
 }

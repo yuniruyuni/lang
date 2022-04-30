@@ -13,6 +13,10 @@ func (s *Mul) Name() Name {
 	return ""
 }
 
+func (s *Mul) Type() Type {
+	return "i32"
+}
+
 func (s *Mul) ResultReg() Reg {
 	return s.Result
 }

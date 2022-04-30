@@ -329,7 +329,7 @@ func (p *Parser) Params(at Pos) (Pos, ast.AST, error) {
 		},
 		p.Concat(
 			func(asts []ast.AST) ast.AST { return asts[0] },
-			p.Variable,
+			p.Param,
 			p.Skip(kind.Comma),
 		),
 	)(at)
@@ -355,6 +355,14 @@ func (p *Parser) Variable(at Pos) (Pos, ast.AST, error) {
 		return at, nil, errors.New("invalid token")
 	}
 	return nx, &ast.Variable{VarName: ast.Name(t.Str)}, nil
+}
+
+func (p *Parser) Param(at Pos) (Pos, ast.AST, error) {
+	nx, t := p.Consume(kind.Identifier, at)
+	if t == nil {
+		return at, nil, errors.New("invalid token")
+	}
+	return nx, &ast.Param{VarName: ast.Name(t.Str)}, nil
 }
 
 func (p *Parser) FuncName(at Pos) (Pos, ast.AST, error) {

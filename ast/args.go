@@ -1,6 +1,10 @@
 package ast
 
-import "github.com/yuniruyuni/lang/ir"
+import (
+	"strings"
+
+	"github.com/yuniruyuni/lang/ir"
+)
 
 type Args struct {
 	Result Reg
@@ -11,6 +15,14 @@ type Args struct {
 
 func (s *Args) Name() Name {
 	return ""
+}
+
+func (s *Args) Type() Type {
+	ts := make([]string, 0, len(s.Values))
+	for _, v := range s.Values {
+		ts = append(ts, string(v.Type()))
+	}
+	return Type(strings.Join(ts, ","))
 }
 
 func (s *Args) ResultReg() Reg {

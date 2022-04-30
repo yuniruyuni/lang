@@ -1,10 +1,13 @@
 package ast
 
-import "github.com/yuniruyuni/lang/ir"
+import (
+	"strings"
+
+	"github.com/yuniruyuni/lang/ir"
+)
 
 type Params struct {
-	Result  Reg
-	CondReg Reg
+	Result Reg
 
 	// for `x, y, z,`
 	Vars []AST
@@ -12,6 +15,14 @@ type Params struct {
 
 func (s *Params) Name() Name {
 	return ""
+}
+
+func (s *Params) Type() Type {
+	ts := make([]string, 0, len(s.Vars))
+	for _, v := range s.Vars {
+		ts = append(ts, string(v.Type()))
+	}
+	return Type(strings.Join(ts, ","))
 }
 
 func (s *Params) ResultReg() Reg {
@@ -27,7 +38,11 @@ func (s *Params) GenHeader(g *Gen) ir.IR {
 }
 
 func (s *Params) GenBody(g *Gen) ir.IR {
-	return ""
+	bodies := make([]ir.IR, 0, len(s.Vars))
+	for _, v := range s.Vars {
+		bodies = append(bodies, v.GenBody(g))
+	}
+	return ir.Join(",", bodies...)
 }
 
 func (s *Params) GenArg() ir.IR {

@@ -12,6 +12,10 @@ func (s *Definitions) Name() Name {
 	return ""
 }
 
+func (s *Definitions) Type() Type {
+	return ""
+}
+
 func (s *Definitions) ResultReg() Reg {
 	return s.Result
 }
@@ -36,6 +40,7 @@ func (s *Definitions) GenBody(g *Gen) ir.IR {
 	for _, d := range s.Defs {
 		g.ResetReg()
 		g.ResetLabel()
+		g.ResetVariables()
 		bodies = append(bodies, d.GenBody(g))
 	}
 

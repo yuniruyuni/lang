@@ -12,6 +12,10 @@ func (s *FuncName) Name() Name {
 	return s.FuncName
 }
 
+func (s *FuncName) Type() Type {
+	return ""
+}
+
 func (s *FuncName) ResultReg() Reg {
 	return 0
 }
